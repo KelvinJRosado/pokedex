@@ -9,6 +9,9 @@ import (
 // Runs the REPL
 // Will read user input and reponds until session ended
 func Run() {
+	// Start the command registry
+	initRegistry()
+
 	// Create scanner instance to read user input
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -28,8 +31,20 @@ func Run() {
 			// Grab 1st word
 			first := cleaned[0]
 
-			// Print message
-			fmt.Printf("Your command was: %v\n", first)
+			// Lookup registry entry
+			command, ok := commandRegistry[first]
+			if !ok {
+				fmt.Println("Unknown command")
+				fmt.Print("Pokedex > ")
+				continue
+			}
+
+			// Do command
+			err := command.callback()
+			if err != nil {
+				fmt.Printf("Error: %v", err.Error())
+			}
+
 		}
 
 		// Prepare next line

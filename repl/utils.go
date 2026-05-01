@@ -1,6 +1,8 @@
 package repl
 
 import (
+	"fmt"
+	"os"
 	"strings"
 )
 
@@ -16,4 +18,45 @@ func cleanInput(text string) []string {
 	out = strings.Fields(lower)
 
 	return out
+}
+
+// Struct defining the format for a CLI command definition
+type cliCommand struct {
+	name        string
+	description string
+	callback    func() error
+}
+
+var commandRegistry = map[string]cliCommand{}
+
+func initRegistry() {
+	commandRegistry = map[string]cliCommand{
+		"exit": {
+			name:        "exit",
+			description: "Exit the Pokedex",
+			callback:    commandExit,
+		},
+		"help": {
+			name:        "help",
+			description: "Displays a help message",
+			callback:    commandHelp,
+		},
+	}
+}
+
+func commandExit() error {
+	fmt.Println("Closing the Pokedex... Goodbye!")
+	os.Exit(0)
+	return nil
+}
+
+func commandHelp() error {
+	fmt.Println("Welcome to the Pokedex!")
+	fmt.Print("Usage:\n\n")
+
+	for k, v := range commandRegistry {
+		fmt.Printf("%v: %v\n", k, v.description)
+	}
+
+	return nil
 }
