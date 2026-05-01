@@ -23,3 +23,5 @@ pokedex
 .idea/
 *.swp
 *.swo
+
+*.log
