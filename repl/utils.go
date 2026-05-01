@@ -41,6 +41,11 @@ func initRegistry() {
 			description: "Displays a help message",
 			callback:    commandHelp,
 		},
+		"map": {
+			name:        "map",
+			description: "",
+			callback:    commandMap,
+		},
 	}
 }
 
@@ -59,5 +64,9 @@ func commandHelp() error {
 		fmt.Printf("%v: %v\n", k, v.description)
 	}
 
+	return nil
+}
+
+func commandMap() error {
 	return nil
 }
