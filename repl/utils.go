@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/kelvinjrosado/pokedex/services/pokeapi"
 )
 
 // Split the user's input into words based on whitespace.
@@ -43,7 +45,7 @@ func initRegistry() {
 		},
 		"map": {
 			name:        "map",
-			description: "",
+			description: "Displays the name of locations in the Pokemon world",
 			callback:    commandMap,
 		},
 	}
@@ -68,5 +70,14 @@ func commandHelp() error {
 }
 
 func commandMap() error {
+
+	la, err := pokeapi.GetLocationArea(1)
+	if err != nil {
+		fmt.Printf("Failed to get location area info: %v", err.Error())
+		return err
+	}
+
+	fmt.Println(la.Name)
+
 	return nil
 }
