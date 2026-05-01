@@ -38,11 +38,14 @@ func Run() {
 		// Clean user input
 		cleaned := cleanInput(input)
 
-		// Grab 1st word
-		first := cleaned[0]
+		// Check how much was entered
+		if len(cleaned) > 0 {
+			// Grab 1st word
+			first := cleaned[0]
 
-		// Print message
-		fmt.Printf("Your command was: %v\n", first)
+			// Print message
+			fmt.Printf("Your command was: %v\n", first)
+		}
 
 		// Prepare next line
 		fmt.Print("Pokedex > ")
