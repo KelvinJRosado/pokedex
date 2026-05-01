@@ -1,8 +1,8 @@
 package repl
 
 import (
+	"errors"
 	"fmt"
-	"os"
 	"strings"
 )
 
@@ -44,10 +44,11 @@ func initRegistry() {
 	}
 }
 
+var CleanExit = errors.New("Clean exit")
+
 func commandExit() error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
-	os.Exit(0)
-	return nil
+	return CleanExit
 }
 
 func commandHelp() error {

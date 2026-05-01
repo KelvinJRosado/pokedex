@@ -2,6 +2,7 @@ package repl
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 )
@@ -42,6 +43,11 @@ func Run() {
 			// Do command
 			err := command.callback()
 			if err != nil {
+				// Check for clean exit
+				if errors.Is(err, CleanExit) {
+					os.Exit(0)
+				}
+
 				fmt.Printf("Error: %v", err.Error())
 			}
 
