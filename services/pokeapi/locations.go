@@ -8,36 +8,36 @@ import (
 	"net/http"
 )
 
-func GetLocationArea(id int) (LocationArea, error) {
+func GetLocationAreaSlice(startId, count int) (LocationAreaList, error) {
 
 	// Build exact path to get location area data
-	fullPath := fmt.Sprintf("%v%v%d", POKEAPI_BASE_URL, "location-area/", id)
+	fullPath := fmt.Sprintf("%vlocation-area/?offset=%d&limit=%d", POKEAPI_BASE_URL, startId, count)
 
 	// Built GET request
 	res, err := http.Get(fullPath)
 	if err != nil {
-		fmt.Printf("Error calling LocationArea API: %v", err.Error())
-		return LocationArea{}, err
+		fmt.Printf("Error calling LocationArea API: %v\n", err.Error())
+		return LocationAreaList{}, err
 	}
 	// Read and parse response
 	data, err := io.ReadAll(res.Body)
 	defer res.Body.Close()
 	if res.StatusCode > 299 {
 		fmt.Printf("LocationArea API call failed with status code: %d and\ndata: %s\n", res.StatusCode, data)
-		return LocationArea{}, errors.New("LocationArea API call failed")
+		return LocationAreaList{}, errors.New("LocationArea API call failed")
 	}
 	if err != nil {
-		fmt.Printf("Failed to parse response body: %v", err.Error())
-		return LocationArea{}, errors.New("LocationArea API response could not be parsed")
+		fmt.Printf("Failed to parse response body: %v\n", err.Error())
+		return LocationAreaList{}, errors.New("LocationArea API response could not be parsed")
 	}
 
 	// Convert data to struct
-	var location LocationArea
-	err = json.Unmarshal(data, &location)
+	var locationsData LocationAreaList
+	err = json.Unmarshal(data, &locationsData)
 	if err != nil {
-		fmt.Printf("Failed to unmarshal data: %v", err.Error())
-		return LocationArea{}, errors.New("LocationArea API response could not be parsed")
+		fmt.Printf("Failed to unmarshal data: %v\n", err.Error())
+		return LocationAreaList{}, errors.New("LocationArea API response could not be parsed")
 	}
 
-	return location, nil
+	return locationsData, nil
 }

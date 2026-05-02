@@ -69,15 +69,23 @@ func commandHelp() error {
 	return nil
 }
 
+// Keep track of current map pointer
+var mapIndex = 1
+
 func commandMap() error {
 
-	la, err := pokeapi.GetLocationArea(1)
+	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT)
 	if err != nil {
 		fmt.Printf("Failed to get location area info: %v", err.Error())
 		return err
 	}
 
-	fmt.Println(la.Name)
+	for _, la := range las.Results {
+		fmt.Println(la.Name)
+	}
+
+	// Increment map pointer
+	mapIndex += pokeapi.MAP_INCREMENT
 
 	return nil
 }
