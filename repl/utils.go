@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kelvinjrosado/pokedex/services/pokeapi"
+	"github.com/kelvinjrosado/pokedex/internal/pokeapi"
 )
 
 // Split the user's input into words based on whitespace.
