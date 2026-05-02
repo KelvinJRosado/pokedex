@@ -45,8 +45,13 @@ func initRegistry() {
 		},
 		"map": {
 			name:        "map",
-			description: "Displays the name of locations in the Pokemon world",
+			description: "Displays the name of the 20 next locations in the Pokemon world",
 			callback:    commandMap,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Displays the name of the 20 previous locations in the Pokemon world",
+			callback:    commandMapb,
 		},
 	}
 }
@@ -86,6 +91,29 @@ func commandMap() error {
 
 	// Increment map pointer
 	mapIndex += pokeapi.MAP_INCREMENT
+
+	return nil
+}
+
+func commandMapb() error {
+	// Check base case
+	if mapIndex == 1 {
+		fmt.Println("you're on the first page")
+		return nil
+	}
+
+	// Decrease map pointer
+	mapIndex -= pokeapi.MAP_INCREMENT
+
+	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT)
+	if err != nil {
+		fmt.Printf("Failed to get location area info: %v", err.Error())
+		return err
+	}
+
+	for _, la := range las.Results {
+		fmt.Println(la.Name)
+	}
 
 	return nil
 }
