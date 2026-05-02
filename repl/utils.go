@@ -75,7 +75,7 @@ func commandHelp() error {
 }
 
 // Keep track of current map pointer
-var mapIndex = 1
+var mapIndex = 0
 
 func commandMap() error {
 
@@ -97,13 +97,13 @@ func commandMap() error {
 
 func commandMapb() error {
 	// Check base case
-	if mapIndex == 1 {
+	if mapIndex <= 20 {
 		fmt.Println("you're on the first page")
 		return nil
 	}
 
 	// Decrease map pointer
-	mapIndex -= pokeapi.MAP_INCREMENT
+	mapIndex -= (pokeapi.MAP_INCREMENT * 2)
 
 	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT)
 	if err != nil {
