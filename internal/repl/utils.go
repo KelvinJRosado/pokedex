@@ -54,6 +54,11 @@ func initRegistry() {
 			description: "Displays the name of the 20 previous locations in the Pokemon world",
 			callback:    commandMapb,
 		},
+		"explore": {
+			name:        "explore",
+			description: "Displays the name of Pokemon that can be encountered in the specified area",
+			callback:    commandExplore,
+		},
 	}
 }
 
@@ -109,6 +114,7 @@ func commandMapb(config *Config, args []string) error {
 	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT, config.Cache)
 	if err != nil {
 		fmt.Printf("Failed to get location area info: %v", err.Error())
+		mapIndex += (pokeapi.MAP_INCREMENT * 2) // restore map index
 		return err
 	}
 
@@ -123,4 +129,21 @@ func commandMapb(config *Config, args []string) error {
 	return nil
 }
 
-func commandExplore(config *Config, args []string) {}
+func commandExplore(config *Config, args []string) error {
+	locationName := args[1]
+
+	details, err := pokeapi.GetLocationAreaDetails(locationName, config.Cache)
+	if err != nil {
+		fmt.Printf("Failed to get location area details: %v", err.Error())
+		return err
+	}
+
+	fmt.Printf("Exploring %v...\n", locationName)
+	fmt.Println("Found Pokemon:")
+
+	for _, v := range details.Encounters {
+		fmt.Printf(" - %v\n", v.Pokemon.Name)
+	}
+
+	return nil
+}
