@@ -48,7 +48,7 @@ func Run() {
 			}
 
 			// Do command
-			err := command.callback(&config)
+			err := command.callback(&config, cleaned)
 			if err != nil {
 				// Check for clean exit
 				if errors.Is(err, CleanExit) {

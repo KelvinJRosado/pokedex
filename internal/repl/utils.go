@@ -26,7 +26,7 @@ func cleanInput(text string) []string {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*Config) error
+	callback    func(*Config, []string) error
 }
 
 var commandRegistry = map[string]cliCommand{}
@@ -59,12 +59,12 @@ func initRegistry() {
 
 var CleanExit = errors.New("Clean exit")
 
-func commandExit(config *Config) error {
+func commandExit(config *Config, args []string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	return CleanExit
 }
 
-func commandHelp(config *Config) error {
+func commandHelp(config *Config, args []string) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Print("Usage:\n\n")
 
@@ -78,7 +78,7 @@ func commandHelp(config *Config) error {
 // Keep track of current map pointer
 var mapIndex = 0
 
-func commandMap(config *Config) error {
+func commandMap(config *Config, args []string) error {
 
 	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT, config.Cache)
 	if err != nil {
@@ -96,7 +96,7 @@ func commandMap(config *Config) error {
 	return nil
 }
 
-func commandMapb(config *Config) error {
+func commandMapb(config *Config, args []string) error {
 	// Check base case
 	if mapIndex <= pokeapi.MAP_INCREMENT {
 		fmt.Println("you're on the first page")
@@ -123,4 +123,4 @@ func commandMapb(config *Config) error {
 	return nil
 }
 
-func commandExplore(config *Config) {}
+func commandExplore(config *Config, args []string) {}
