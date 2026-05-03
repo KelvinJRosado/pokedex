@@ -26,12 +26,13 @@ func cleanInput(text string) []string {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(*Config) error
 }
 
 var commandRegistry = map[string]cliCommand{}
 
 func initRegistry() {
+
 	commandRegistry = map[string]cliCommand{
 		"exit": {
 			name:        "exit",
@@ -58,12 +59,12 @@ func initRegistry() {
 
 var CleanExit = errors.New("Clean exit")
 
-func commandExit() error {
+func commandExit(config *Config) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	return CleanExit
 }
 
-func commandHelp() error {
+func commandHelp(config *Config) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Print("Usage:\n\n")
 
@@ -77,9 +78,9 @@ func commandHelp() error {
 // Keep track of current map pointer
 var mapIndex = 0
 
-func commandMap() error {
+func commandMap(config *Config) error {
 
-	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT)
+	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT, config.Cache)
 	if err != nil {
 		fmt.Printf("Failed to get location area info: %v", err.Error())
 		return err
@@ -95,7 +96,7 @@ func commandMap() error {
 	return nil
 }
 
-func commandMapb() error {
+func commandMapb(config *Config) error {
 	// Check base case
 	if mapIndex <= 20 {
 		fmt.Println("you're on the first page")
@@ -105,7 +106,7 @@ func commandMapb() error {
 	// Decrease map pointer
 	mapIndex -= (pokeapi.MAP_INCREMENT * 2)
 
-	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT)
+	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT, config.Cache)
 	if err != nil {
 		fmt.Printf("Failed to get location area info: %v", err.Error())
 		return err

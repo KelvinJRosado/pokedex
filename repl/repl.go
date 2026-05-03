@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/kelvinjrosado/pokedex/internal/pokecache"
 )
 
 // Runs the REPL
@@ -15,6 +18,10 @@ func Run() {
 
 	// Create scanner instance to read user input
 	scanner := bufio.NewScanner(os.Stdin)
+
+	// Init cache, with 5 second cleanup
+	cache := pokecache.NewCache(time.Second * 5)
+	config := Config{Cache: cache}
 
 	// Print standard line
 	fmt.Print("Pokedex > ")
@@ -41,7 +48,7 @@ func Run() {
 			}
 
 			// Do command
-			err := command.callback()
+			err := command.callback(&config)
 			if err != nil {
 				// Check for clean exit
 				if errors.Is(err, CleanExit) {
