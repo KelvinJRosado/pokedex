@@ -22,7 +22,13 @@ type PokemonEncounter struct {
 }
 
 type LocationAreaDetails struct {
-	Id         int                `json:"int"`
-	Name       string             `json:"string"`
+	Id         int                `json:"id"`
+	Name       string             `json:"name"`
 	Encounters []PokemonEncounter `json:"pokemon_encounters"`
+}
+
+type PokemonDetails struct {
+	Id             int    `json:"id"`
+	BaseExperience int    `json:"base_experience"`
+	Name           string `json:"name"`
 }
