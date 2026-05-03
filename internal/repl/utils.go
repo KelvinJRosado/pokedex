@@ -65,6 +65,11 @@ func initRegistry() {
 			description: "Attempt to catch the specified Pokemon",
 			callback:    commandCatch,
 		},
+		"inspect": {
+			name:        "inspect",
+			description: "Displays information about the specified Pokemon if caught",
+			callback:    commandInspect,
+		},
 	}
 }
 
@@ -178,6 +183,33 @@ func commandCatch(config *Config, args []string) error {
 		config.CaughtPokemonMap.Add(pokemonDetails.Name, pokemonDetails)
 	} else {
 		fmt.Printf("%v escaped!\n", pokemonDetails.Name)
+	}
+
+	return nil
+}
+
+func commandInspect(config *Config, args []string) error {
+
+	// Grab from caught list
+	name := args[1]
+	val, ok := config.CaughtPokemonMap.Get(name)
+
+	if !ok {
+		fmt.Println("you have not caught that pokemon")
+		return nil
+	}
+
+	// If caught, print info
+	fmt.Printf("Name: %v\n", val.Name)
+	fmt.Printf("Height: %d\n", val.Height)
+	fmt.Printf("Weight: %d\n", val.Weight)
+	fmt.Println("Stats:")
+	for _, s := range val.Stats {
+		fmt.Printf("  -%v: %d\n", s.Stat.Name, s.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, t := range val.Types {
+		fmt.Printf("  - %v\n", t.Type.Name)
 	}
 
 	return nil
