@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/kelvinjrosado/pokedex/repl"
+	"github.com/kelvinjrosado/pokedex/internal/repl"
 )
 
 func main() {
