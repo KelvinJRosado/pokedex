@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/kelvinjrosado/pokedex/internal/pokeapi"
 	"github.com/kelvinjrosado/pokedex/internal/pokecache"
 )
 
@@ -21,7 +22,11 @@ func Run() {
 
 	// Init cache, with 5 second cleanup
 	cache := pokecache.NewCache(time.Second * 5)
-	config := Config{Cache: cache}
+
+	// Init pokemon collection
+	cpl := pokeapi.NewCaughtPokemonMap()
+
+	config := Config{Cache: cache, CaughtPokemonMap: cpl}
 
 	// Print standard line
 	fmt.Print("Pokedex > ")
@@ -55,7 +60,7 @@ func Run() {
 					os.Exit(0)
 				}
 
-				fmt.Printf("Error: %v", err.Error())
+				fmt.Printf("Error: %v\n", err.Error())
 			}
 
 		}

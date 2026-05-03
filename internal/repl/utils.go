@@ -3,6 +3,7 @@ package repl
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
 
 	"github.com/kelvinjrosado/pokedex/internal/pokeapi"
@@ -59,6 +60,11 @@ func initRegistry() {
 			description: "Displays the name of Pokemon that can be encountered in the specified area",
 			callback:    commandExplore,
 		},
+		"catch": {
+			name:        "catch",
+			description: "Attempt to catch the specified Pokemon",
+			callback:    commandCatch,
+		},
 	}
 }
 
@@ -87,7 +93,7 @@ func commandMap(config *Config, args []string) error {
 
 	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT, config.Cache)
 	if err != nil {
-		fmt.Printf("Failed to get location area info: %v", err.Error())
+		fmt.Printf("Failed to get location area info: %v\n", err.Error())
 		return err
 	}
 
@@ -113,7 +119,7 @@ func commandMapb(config *Config, args []string) error {
 
 	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT, config.Cache)
 	if err != nil {
-		fmt.Printf("Failed to get location area info: %v", err.Error())
+		fmt.Printf("Failed to get location area info: %v\n", err.Error())
 		mapIndex += (pokeapi.MAP_INCREMENT * 2) // restore map index
 		return err
 	}
@@ -134,7 +140,7 @@ func commandExplore(config *Config, args []string) error {
 
 	details, err := pokeapi.GetLocationAreaDetails(locationName, config.Cache)
 	if err != nil {
-		fmt.Printf("Failed to get location area details: %v", err.Error())
+		fmt.Printf("Failed to get location area details: %v\n", err.Error())
 		return err
 	}
 
@@ -143,6 +149,35 @@ func commandExplore(config *Config, args []string) error {
 
 	for _, v := range details.Encounters {
 		fmt.Printf(" - %v\n", v.Pokemon.Name)
+	}
+
+	return nil
+}
+
+func commandCatch(config *Config, args []string) error {
+	pokemonName := args[1]
+
+	// Get details
+	pokemonDetails, err := pokeapi.GetPokemonDetails(pokemonName, config.Cache)
+	if err != nil {
+		fmt.Printf("Failed to get pokemon details: %v\n", err.Error())
+		return err
+	}
+
+	fmt.Printf("Throwing a Pokeball at %v...\n", pokemonDetails.Name)
+
+	// Check if caught
+	roll := rand.Intn(700)              // Get random number from 0 to max
+	be := pokemonDetails.BaseExperience // Get Pokemon base experience for roll
+
+	if roll >= be {
+		// Caught
+		fmt.Printf("%v was caught!\n", pokemonDetails.Name)
+
+		// Save to caught list
+		config.CaughtPokemonMap.Add(pokemonDetails.Name, pokemonDetails)
+	} else {
+		fmt.Printf("%v escaped!\n", pokemonDetails.Name)
 	}
 
 	return nil
