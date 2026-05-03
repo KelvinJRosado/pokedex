@@ -98,7 +98,7 @@ func commandMap(config *Config) error {
 
 func commandMapb(config *Config) error {
 	// Check base case
-	if mapIndex <= 20 {
+	if mapIndex <= pokeapi.MAP_INCREMENT {
 		fmt.Println("you're on the first page")
 		return nil
 	}
@@ -116,5 +116,11 @@ func commandMapb(config *Config) error {
 		fmt.Println(la.Name)
 	}
 
+	// Increase map pointer again as we travelled
+	// 	// Decrease map pointer
+	mapIndex += pokeapi.MAP_INCREMENT
+
 	return nil
 }
+
+func commandExplore(config *Config) {}
