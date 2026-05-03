@@ -70,6 +70,11 @@ func initRegistry() {
 			description: "Displays information about the specified Pokemon if caught",
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "Displays all caught Pokemon",
+			callback:    commandPokedex,
+		},
 	}
 }
 
@@ -210,6 +215,22 @@ func commandInspect(config *Config, args []string) error {
 	fmt.Println("Types:")
 	for _, t := range val.Types {
 		fmt.Printf("  - %v\n", t.Type.Name)
+	}
+
+	return nil
+}
+
+func commandPokedex(config *Config, args []string) error {
+
+	caught := config.CaughtPokemonMap.Entries
+
+	// Base case: Pokedex is empty
+	if len(caught) == 0 {
+		fmt.Println("You have not caught any Pokemon yet")
+	}
+
+	for k, _ := range caught {
+		fmt.Printf(" - %v\n", k)
 	}
 
 	return nil

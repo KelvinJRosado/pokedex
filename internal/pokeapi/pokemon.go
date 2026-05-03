@@ -58,7 +58,7 @@ func GetPokemonDetails(name string, cache *pokecache.Cache) (PokemonDetails, err
 }
 
 type CaughtPokemonMap struct {
-	entries map[string]PokemonDetails
+	Entries map[string]PokemonDetails
 	mu      sync.RWMutex
 }
 
@@ -67,7 +67,7 @@ func NewCaughtPokemonMap() *CaughtPokemonMap {
 	initEntries := make(map[string]PokemonDetails)
 
 	res := CaughtPokemonMap{
-		entries: initEntries,
+		Entries: initEntries,
 	}
 
 	return &res
@@ -80,7 +80,7 @@ func (c *CaughtPokemonMap) Add(key string, myVal PokemonDetails) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.entries[key] = myVal
+	c.Entries[key] = myVal
 }
 
 // Retrieve a cache entry
@@ -90,7 +90,7 @@ func (c *CaughtPokemonMap) Get(key string) (PokemonDetails, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	res, ok := c.entries[key]
+	res, ok := c.Entries[key]
 	if !ok {
 		return PokemonDetails{}, false
 	}
