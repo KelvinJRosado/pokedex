@@ -27,8 +27,33 @@ type LocationAreaDetails struct {
 	Encounters []PokemonEncounter `json:"pokemon_encounters"`
 }
 
+type StatMeta struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
+
+type TypeMeta struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
+
+type PokemonType struct {
+	Slot int      `json:"slot"`
+	Type TypeMeta `json:"type"`
+}
+
+type PokemonStat struct {
+	BaseStat int      `json:"base_stat"`
+	Effort   int      `json:"effort"`
+	Stat     StatMeta `json:"stat"`
+}
+
 type PokemonDetails struct {
-	Id             int    `json:"id"`
-	BaseExperience int    `json:"base_experience"`
-	Name           string `json:"name"`
+	Id             int           `json:"id"`
+	BaseExperience int           `json:"base_experience"`
+	Height         int           `json:"height"`
+	Weight         int           `json:"weight"`
+	Name           string        `json:"name"`
+	Stats          []PokemonStat `json:"stats"`
+	Types          []PokemonType `json:"types"`
 }
