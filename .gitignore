@@ -21,6 +21,7 @@ pokedex
 # Editor directories and files
 .vscode/
 .idea/
+.opencode/
 *.swp
 *.swo
 
