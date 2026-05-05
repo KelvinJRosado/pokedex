@@ -1,6 +1,8 @@
 package repl
 
 import (
+	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -67,5 +69,15 @@ func initRegistry() {
 }
 
 func printMapAlphabetical[T any](entry map[string]T) {
+	keys := make([]string, len(entry))
 
+	for k := range entry {
+		keys = append(keys, k)
+	}
+
+	slices.Sort(keys)
+
+	for k := range keys {
+		fmt.Printf("%v\n", k)
+	}
 }
