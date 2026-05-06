@@ -30,13 +30,15 @@ func GetLocationAreaSlice(startId, count int, cache *pokecache.Cache) (LocationA
 			fmt.Printf("Error calling LocationArea API: %v\n", err.Error())
 			return LocationAreaList{}, err
 		}
-		// Read and parse response
-		data, err = io.ReadAll(res.Body)
 		defer res.Body.Close()
+
 		if res.StatusCode > 299 {
 			fmt.Printf("LocationArea API call failed with status code: %d and\ndata: %s\n", res.StatusCode, data)
 			return LocationAreaList{}, errors.New("LocationArea API call failed")
 		}
+
+		// Read and parse response
+		data, err = io.ReadAll(res.Body)
 		if err != nil {
 			fmt.Printf("Failed to parse response body: %v\n", err.Error())
 			return LocationAreaList{}, errors.New("LocationArea API response could not be parsed")
@@ -77,13 +79,15 @@ func GetLocationAreaDetails(name string, cache *pokecache.Cache) (LocationAreaDe
 			fmt.Printf("Error calling LocationArea API: %v\n", err.Error())
 			return LocationAreaDetails{}, err
 		}
-		// Read and parse response
-		data, err = io.ReadAll(res.Body)
 		defer res.Body.Close()
+
 		if res.StatusCode > 299 {
 			fmt.Printf("LocationArea API call failed with status code: %d and\ndata: %s\n", res.StatusCode, data)
 			return LocationAreaDetails{}, errors.New("LocationArea API call failed")
 		}
+
+		// Read and parse response
+		data, err = io.ReadAll(res.Body)
 		if err != nil {
 			fmt.Printf("Failed to parse response body: %v\n", err.Error())
 			return LocationAreaDetails{}, errors.New("LocationArea API response could not be parsed")
