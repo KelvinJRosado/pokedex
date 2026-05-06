@@ -26,7 +26,7 @@ func Run() {
 	// Init pokemon collection
 	cpl := pokeapi.NewCaughtPokemonMap()
 
-	config := Config{Cache: cache, CaughtPokemonMap: cpl}
+	config := Config{Cache: cache, CaughtPokemonMap: cpl, MapIndex: 0}
 
 	// Print standard line
 	fmt.Print("Pokedex > ")

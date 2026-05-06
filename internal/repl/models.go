@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Cache            *pokecache.Cache
 	CaughtPokemonMap *pokeapi.CaughtPokemonMap
+	MapIndex         int
 }
 
 // Struct defining the format for a CLI command definition

@@ -32,12 +32,9 @@ func commandHelp(config *Config, args []string) error {
 	return nil
 }
 
-// Keep track of current map pointer
-var mapIndex = 0
-
 func commandMap(config *Config, args []string) error {
 
-	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT, config.Cache)
+	las, err := pokeapi.GetLocationAreaSlice(config.MapIndex, pokeapi.MAP_INCREMENT, config.Cache)
 	if err != nil {
 		fmt.Printf("Failed to get location area info: %v\n", err.Error())
 		return err
@@ -48,25 +45,25 @@ func commandMap(config *Config, args []string) error {
 	}
 
 	// Increment map pointer
-	mapIndex += pokeapi.MAP_INCREMENT
+	config.MapIndex += pokeapi.MAP_INCREMENT
 
 	return nil
 }
 
 func commandMapb(config *Config, args []string) error {
 	// Check base case
-	if mapIndex <= pokeapi.MAP_INCREMENT {
+	if config.MapIndex <= pokeapi.MAP_INCREMENT {
 		fmt.Println("you're on the first page")
 		return nil
 	}
 
 	// Decrease map pointer
-	mapIndex -= (pokeapi.MAP_INCREMENT * 2)
+	config.MapIndex -= (pokeapi.MAP_INCREMENT * 2)
 
-	las, err := pokeapi.GetLocationAreaSlice(mapIndex, pokeapi.MAP_INCREMENT, config.Cache)
+	las, err := pokeapi.GetLocationAreaSlice(config.MapIndex, pokeapi.MAP_INCREMENT, config.Cache)
 	if err != nil {
 		fmt.Printf("Failed to get location area info: %v\n", err.Error())
-		mapIndex += (pokeapi.MAP_INCREMENT * 2) // restore map index
+		config.MapIndex += (pokeapi.MAP_INCREMENT * 2) // restore map index
 		return err
 	}
 
@@ -76,7 +73,7 @@ func commandMapb(config *Config, args []string) error {
 
 	// Increase map pointer again as we travelled
 	// 	// Decrease map pointer
-	mapIndex += pokeapi.MAP_INCREMENT
+	config.MapIndex += pokeapi.MAP_INCREMENT
 
 	return nil
 }
