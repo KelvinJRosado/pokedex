@@ -82,6 +82,13 @@ func commandMapb(config *Config, args []string) error {
 }
 
 func commandExplore(config *Config, args []string) error {
+
+	// Check for args being present
+	if len(args) < 2 {
+		fmt.Println("Insufficient args provided for \"explore\"")
+		return nil
+	}
+
 	locationName := args[1]
 
 	details, err := pokeapi.GetLocationAreaDetails(locationName, config.Cache)
@@ -101,6 +108,13 @@ func commandExplore(config *Config, args []string) error {
 }
 
 func commandCatch(config *Config, args []string) error {
+
+	// Check for args being present
+	if len(args) < 2 {
+		fmt.Println("Insufficient args provided for \"catch\"")
+		return nil
+	}
+
 	pokemonName := args[1]
 
 	// Get details
@@ -130,6 +144,12 @@ func commandCatch(config *Config, args []string) error {
 }
 
 func commandInspect(config *Config, args []string) error {
+
+	// Check for args being present
+	if len(args) < 2 {
+		fmt.Println("Insufficient args provided for \"inspect\"")
+		return nil
+	}
 
 	// Grab from caught list
 	name := args[1]
