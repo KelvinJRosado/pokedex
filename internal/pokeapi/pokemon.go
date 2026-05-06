@@ -30,13 +30,15 @@ func GetPokemonDetails(name string, cache *pokecache.Cache) (PokemonDetails, err
 			fmt.Printf("Error calling Pokemon details API: %v\n", err.Error())
 			return PokemonDetails{}, err
 		}
-		// Read and parse response
-		data, err = io.ReadAll(res.Body)
 		defer res.Body.Close()
+
 		if res.StatusCode > 299 {
 			fmt.Printf("Pokemon details API call failed with status code: %d and\ndata: %s\n", res.StatusCode, data)
 			return PokemonDetails{}, errors.New("Pokemon details API call failed")
 		}
+
+		// Read and parse response
+		data, err = io.ReadAll(res.Body)
 		if err != nil {
 			fmt.Printf("Failed to parse response body: %v\n", err.Error())
 			return PokemonDetails{}, errors.New("Pokemon details API response could not be parsed")
