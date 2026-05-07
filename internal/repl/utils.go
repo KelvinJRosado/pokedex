@@ -1,8 +1,6 @@
 package repl
 
 import (
-	"fmt"
-	"slices"
 	"strings"
 )
 
@@ -20,47 +18,44 @@ func cleanInput(text string) []string {
 	return out
 }
 
-var commandRegistry = map[string]cliCommand{}
-
-func initRegistry() {
-
-	commandRegistry = map[string]cliCommand{
-		"exit": {
+func getAllCommands() []cliCommand {
+	return []cliCommand{
+		{
 			name:        "exit",
 			description: "Exit the Pokedex",
 			callback:    commandExit,
 		},
-		"help": {
+		{
 			name:        "help",
 			description: "Displays a help message",
 			callback:    commandHelp,
 		},
-		"map": {
+		{
 			name:        "map",
 			description: "Displays the name of the 20 next locations in the Pokemon world",
 			callback:    commandMap,
 		},
-		"mapb": {
+		{
 			name:        "mapb",
 			description: "Displays the name of the 20 previous locations in the Pokemon world",
 			callback:    commandMapb,
 		},
-		"explore": {
+		{
 			name:        "explore",
 			description: "Displays the name of Pokemon that can be encountered in the specified area",
 			callback:    commandExplore,
 		},
-		"catch": {
+		{
 			name:        "catch",
 			description: "Attempt to catch the specified Pokemon",
 			callback:    commandCatch,
 		},
-		"inspect": {
+		{
 			name:        "inspect",
 			description: "Displays information about the specified Pokemon if caught",
 			callback:    commandInspect,
 		},
-		"pokedex": {
+		{
 			name:        "pokedex",
 			description: "Displays all caught Pokemon",
 			callback:    commandPokedex,
@@ -68,16 +63,11 @@ func initRegistry() {
 	}
 }
 
-func printMapAlphabetical[T any](entry map[string]T) {
-	keys := make([]string, len(entry))
-
-	for k := range entry {
-		keys = append(keys, k)
+func getCommand(name string) (cliCommand, bool) {
+	for _, cmd := range getAllCommands() {
+		if name == cmd.name {
+			return cmd, true
+		}
 	}
-
-	slices.Sort(keys)
-
-	for k := range keys {
-		fmt.Printf("%v\n", k)
-	}
+	return cliCommand{}, false
 }

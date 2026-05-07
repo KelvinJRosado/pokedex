@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"slices"
+	"strings"
 
 	"github.com/kelvinjrosado/pokedex/internal/pokeapi"
 )
@@ -17,16 +18,13 @@ func commandHelp(config *Config, args []string) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Print("Usage:\n\n")
 
-	// Sort map
-	keys := make([]string, 0, len(commandRegistry))
-	for k := range commandRegistry {
-		keys = append(keys, k)
-	}
-	slices.Sort(keys)
+	cmds := getAllCommands()
+	slices.SortFunc(cmds, func(a, b cliCommand) int {
+		return strings.Compare(a.name, b.name)
+	})
 
-	// Print commands in alphabetical order
-	for _, k := range keys {
-		fmt.Printf("%v: %v\n", k, commandRegistry[k].description)
+	for _, cmd := range cmds {
+		fmt.Printf("%v: %v\n", cmd.name, cmd.description)
 	}
 
 	return nil
