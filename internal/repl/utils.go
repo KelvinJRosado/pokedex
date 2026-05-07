@@ -18,6 +18,18 @@ func cleanInput(text string) []string {
 	return out
 }
 
+// getAllCommands returns the command registry as a fresh slice on every call.
+// A slice is used instead of a map so there is no package-level mutable state that
+// could be accidentally modified. The slice is rebuilt on each call, making the
+// registry effectively immutable — callers get their own copy and cannot mutate
+// a shared reference. This also avoids the initialization cycle that occurs when
+// a package-level variable (map or slice) references command functions whose
+// bodies in turn read from that same variable.
+//
+// The tradeoff is that this allocates a new slice on every invocation, whereas a
+// package-level map or slice would allocate once and reuse. However, with only a
+// handful of commands in the registry, the allocation is trivial and well worth
+// the guarantee of no shared mutable state.
 func getAllCommands() []cliCommand {
 	return []cliCommand{
 		{
