@@ -20,4 +20,4 @@ type cliCommand struct {
 	callback    func(*Config, []string) error
 }
 
-var CleanExit = errors.New("Clean exit")
+var CleanExit = errors.New("clean exit")
