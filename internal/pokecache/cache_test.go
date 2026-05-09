@@ -25,6 +25,7 @@ func TestAddGet(t *testing.T) {
 	for i, c := range cases {
 		t.Run(fmt.Sprintf("Test case %v", i), func(t *testing.T) {
 			cache := NewCache(interval)
+			defer cache.Stop()
 
 			cache.Add(c.key, c.val)
 
@@ -47,6 +48,7 @@ func TestReapLoop(t *testing.T) {
 	const waitTime = baseTime + (5 * time.Millisecond)
 
 	cache := NewCache(baseTime)
+	defer cache.Stop()
 	cache.Add("https://example.com", []byte("testdata"))
 
 	_, ok := cache.Get("https://example.com")

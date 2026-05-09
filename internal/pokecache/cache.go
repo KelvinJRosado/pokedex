@@ -13,6 +13,8 @@ type cacheEntry struct {
 type Cache struct {
 	entries map[string]cacheEntry
 	mu      sync.RWMutex
+	ticker  *time.Ticker
+	done    chan struct{}
 }
 
 func NewCache(interval time.Duration) *Cache {
@@ -21,18 +23,30 @@ func NewCache(interval time.Duration) *Cache {
 
 	res := Cache{
 		entries: initEntries,
+		done:    make(chan struct{}),
 	}
 
 	// Start auto cleanup
-	ticker := time.NewTicker(interval)
+	res.ticker = time.NewTicker(interval)
 
 	go func() {
-		for range ticker.C {
-			res.reapLoop(interval)
+		for {
+			select {
+			case <-res.ticker.C:
+				res.reapLoop(interval)
+			case <-res.done:
+				return
+			}
 		}
 	}()
 
 	return &res
+}
+
+// Stop terminates the background reap goroutine and releases resources.
+func (c *Cache) Stop() {
+	c.ticker.Stop()
+	close(c.done)
 }
 
 // Create or update a cache entry

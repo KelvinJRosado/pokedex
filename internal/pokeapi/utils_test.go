@@ -24,7 +24,9 @@ func withTestServer(t *testing.T, srv *httptest.Server) {
 func newCache(t *testing.T) *pokecache.Cache {
 	t.Helper()
 	// Long interval so reapLoop never runs during the test.
-	return pokecache.NewCache(time.Hour)
+	c := pokecache.NewCache(time.Hour)
+	t.Cleanup(c.Stop)
+	return c
 }
 
 func TestFetchWithCacheNetworkSuccess(t *testing.T) {
@@ -110,5 +112,31 @@ func TestFetchWithCacheNetworkError(t *testing.T) {
 	_, err := fetchWithCache[PokemonDetails](cache, "http://127.0.0.1:1/never", "PokemonDetails")
 	if err == nil {
 		t.Fatal("expected network error")
+	}
+}
+
+func TestFetchWithCacheReadBodyError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hj, ok := w.(http.Hijacker)
+		if !ok {
+			t.Fatal("server does not support hijacking")
+		}
+		conn, buf, err := hj.Hijack()
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer conn.Close()
+		// Write a partial response then close, causing io.ReadAll to fail.
+		_, _ = buf.WriteString("HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\npartial")
+		buf.Flush()
+		conn.Close()
+	}))
+	defer srv.Close()
+	withTestServer(t, srv)
+
+	cache := newCache(t)
+	_, err := fetchWithCache[PokemonDetails](cache, pokeapiBaseUrl+"pokemon/glitcho", "PokemonDetails")
+	if err == nil {
+		t.Fatal("expected error reading response body")
 	}
 }
