@@ -2,7 +2,6 @@ package pokeapi
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -38,8 +37,7 @@ func GetPokemonDetails(name string, cache *pokecache.Cache) (PokemonDetails, err
 		}
 
 		if res.StatusCode > 299 {
-			fmt.Printf("Pokemon details API call failed with status code: %d and\ndata: %s\n", res.StatusCode, data)
-			return PokemonDetails{}, errors.New("Pokemon details API call failed")
+			return PokemonDetails{}, fmt.Errorf("Pokemon details API call failed with status %d: %s", res.StatusCode, data)
 		}
 
 		// Save response to cache
