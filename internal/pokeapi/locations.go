@@ -9,7 +9,7 @@ import (
 func GetLocationAreaSlice(startId, count int, cache *pokecache.Cache) (LocationAreaList, error) {
 
 	// Build exact path to get location area data
-	fullPath := fmt.Sprintf("%vlocation-area/?offset=%d&limit=%d", POKEAPI_BASE_URL, startId, count)
+	fullPath := fmt.Sprintf("%vlocation-area/?offset=%d&limit=%d", pokeapiBaseUrl, startId, count)
 
 	return fetchWithCache[LocationAreaList](cache, fullPath, "LocationAreaList")
 }
@@ -17,7 +17,7 @@ func GetLocationAreaSlice(startId, count int, cache *pokecache.Cache) (LocationA
 func GetLocationAreaDetails(name string, cache *pokecache.Cache) (LocationAreaDetails, error) {
 
 	// Build exact path to get location area detail data
-	fullPath := fmt.Sprintf("%vlocation-area/%v", POKEAPI_BASE_URL, name)
+	fullPath := fmt.Sprintf("%vlocation-area/%v", pokeapiBaseUrl, name)
 
 	return fetchWithCache[LocationAreaDetails](cache, fullPath, "LocationAreaDetails")
 }
