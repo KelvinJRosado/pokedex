@@ -29,8 +29,9 @@ func fetchWithCache[T any](cache *pokecache.Cache, fullPath, label string) (T, e
 		}
 		defer res.Body.Close()
 
-		// Read and parse response
-		data, err := io.ReadAll(res.Body)
+		// Read and parse response. Note: assignment with `=` (not `:=`) so we
+		// write to the outer `data`; otherwise it stays nil and Unmarshal fails.
+		data, err = io.ReadAll(res.Body)
 		if err != nil {
 			return response, err
 		}
