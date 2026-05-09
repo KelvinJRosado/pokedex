@@ -4,70 +4,53 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"os"
+	"io"
 	"time"
 
 	"github.com/kelvinjrosado/pokedex/internal/pokeapi"
 	"github.com/kelvinjrosado/pokedex/internal/pokecache"
 )
 
-// Runs the REPL
-// Will read user input and reponds until session ended
-func Run() {
+// Run reads commands from in and writes prompts and output to out, returning
+// when the user runs `exit`, when in reaches EOF, or when the scanner errors.
+func Run(in io.Reader, out io.Writer) {
+	scanner := bufio.NewScanner(in)
 
-	// Create scanner instance to read user input
-	scanner := bufio.NewScanner(os.Stdin)
-
-	// Init cache, with 5 second cleanup
 	cache := pokecache.NewCache(time.Second * 5)
+	defer cache.Stop()
 
-	// Init pokemon collection
 	cpl := pokeapi.NewCaughtPokemonMap()
+	config := Config{
+		Cache:            cache,
+		CaughtPokemonMap: cpl,
+		Writer:           out,
+	}
 
-	config := Config{Cache: cache, CaughtPokemonMap: cpl, MapIndex: 0}
-
-	// Print standard line
-	fmt.Print("Pokedex > ")
-
-	// Use an infinite loop to keep CLI open
+	fmt.Fprint(out, "Pokedex > ")
 	for scanner.Scan() {
-		// Get user input
-		input := scanner.Text()
+		cleaned := cleanInput(scanner.Text())
 
-		// Clean user input
-		cleaned := cleanInput(input)
-
-		// Check how much was entered
 		if len(cleaned) > 0 {
-			// Grab 1st word
-			first := cleaned[0]
-
-			// Lookup registry entry
-			command, ok := getCommand(first)
+			command, ok := getCommand(cleaned[0])
 			if !ok {
-				fmt.Println("Unknown command")
-				fmt.Print("Pokedex > ")
+				fmt.Fprintln(out, "Unknown command")
+				fmt.Fprint(out, "Pokedex > ")
 				continue
 			}
 
-			// Do command
 			err := command.callback(&config, cleaned)
 			if err != nil {
-				// Check for clean exit
 				if errors.Is(err, ErrCleanExit) {
-					os.Exit(0)
+					return
 				}
-
-				fmt.Printf("Error: %v\n", err)
+				fmt.Fprintf(out, "Error: %v\n", err)
 			}
-
 		}
 
-		// Prepare next line
-		fmt.Print("Pokedex > ")
+		fmt.Fprint(out, "Pokedex > ")
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Printf("Invalid input: %s\n", err)
+		fmt.Fprintf(out, "Invalid input: %s\n", err)
 	}
 }
