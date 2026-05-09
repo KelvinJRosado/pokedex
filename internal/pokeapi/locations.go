@@ -27,20 +27,17 @@ func GetLocationAreaSlice(startId, count int, cache *pokecache.Cache) (LocationA
 		// Built GET request
 		res, err := http.Get(fullPath)
 		if err != nil {
-			fmt.Printf("Error calling LocationArea API: %v\n", err.Error())
 			return LocationAreaList{}, err
 		}
 		defer res.Body.Close()
 
 		// Read and parse response
-		data, err = io.ReadAll(res.Body)
+		data, err := io.ReadAll(res.Body)
 		if err != nil {
-			fmt.Printf("Failed to parse response body: %v\n", err.Error())
-			return LocationAreaList{}, errors.New("LocationArea API response could not be parsed")
+			return LocationAreaList{}, err
 		}
 
 		if res.StatusCode > 299 {
-			fmt.Printf("LocationArea API call failed with status code: %d and\ndata: %s\n", res.StatusCode, data)
 			return LocationAreaList{}, errors.New("LocationArea API call failed")
 		}
 
@@ -52,8 +49,7 @@ func GetLocationAreaSlice(startId, count int, cache *pokecache.Cache) (LocationA
 	var locationsData LocationAreaList
 	err := json.Unmarshal(data, &locationsData)
 	if err != nil {
-		fmt.Printf("Failed to unmarshal data: %v\n", err.Error())
-		return LocationAreaList{}, errors.New("LocationArea API response could not be parsed")
+		return LocationAreaList{}, err
 	}
 
 	return locationsData, nil
@@ -76,16 +72,14 @@ func GetLocationAreaDetails(name string, cache *pokecache.Cache) (LocationAreaDe
 		// Built GET request
 		res, err := http.Get(fullPath)
 		if err != nil {
-			fmt.Printf("Error calling LocationArea API: %v\n", err.Error())
 			return LocationAreaDetails{}, err
 		}
 		defer res.Body.Close()
 
 		// Read and parse response
-		data, err = io.ReadAll(res.Body)
+		data, err := io.ReadAll(res.Body)
 		if err != nil {
-			fmt.Printf("Failed to parse response body: %v\n", err.Error())
-			return LocationAreaDetails{}, errors.New("LocationArea API response could not be parsed")
+			return LocationAreaDetails{}, err
 		}
 
 		if res.StatusCode > 299 {
@@ -101,8 +95,7 @@ func GetLocationAreaDetails(name string, cache *pokecache.Cache) (LocationAreaDe
 	var locationsData LocationAreaDetails
 	err := json.Unmarshal(data, &locationsData)
 	if err != nil {
-		fmt.Printf("Failed to unmarshal data: %v\n", err.Error())
-		return LocationAreaDetails{}, errors.New("LocationArea API response could not be parsed")
+		return LocationAreaDetails{}, err
 	}
 
 	return locationsData, nil
