@@ -1,10 +1,7 @@
 package pokeapi
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"sync"
 
 	"github.com/kelvinjrosado/pokedex/internal/pokecache"
@@ -14,44 +11,7 @@ func GetPokemonDetails(name string, cache *pokecache.Cache) (PokemonDetails, err
 	// Build exact path to get location area detail data
 	fullPath := fmt.Sprintf("%vpokemon/%v", POKEAPI_BASE_URL, name)
 
-	// Store raw data from response
-	var data []byte
-
-	// Check cache
-	cacheRes, hit := cache.Get(fullPath)
-	if hit {
-		data = cacheRes
-		fmt.Println("Serving response from cache")
-	} else {
-		// Built GET request
-		res, err := http.Get(fullPath)
-		if err != nil {
-			return PokemonDetails{}, err
-		}
-		defer res.Body.Close()
-
-		// Read and parse response
-		data, err := io.ReadAll(res.Body)
-		if err != nil {
-			return PokemonDetails{}, err
-		}
-
-		if res.StatusCode > 299 {
-			return PokemonDetails{}, fmt.Errorf("Pokemon details API call failed with status %d: %s", res.StatusCode, data)
-		}
-
-		// Save response to cache
-		cache.Add(fullPath, data)
-	}
-
-	// Convert data to struct
-	var pokemonData PokemonDetails
-	err := json.Unmarshal(data, &pokemonData)
-	if err != nil {
-		return PokemonDetails{}, err
-	}
-
-	return pokemonData, nil
+	return fetchWithCache[PokemonDetails](cache, fullPath, "PokemonDetails")
 }
 
 type CaughtPokemonMap struct {
