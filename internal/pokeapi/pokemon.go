@@ -9,7 +9,7 @@ import (
 
 func GetPokemonDetails(name string, cache *pokecache.Cache) (PokemonDetails, error) {
 	// Build exact path to get pokemon detail data
-	fullPath := fmt.Sprintf("%vpokemon/%v", POKEAPI_BASE_URL, name)
+	fullPath := fmt.Sprintf("%vpokemon/%v", pokeapiBaseUrl, name)
 
 	return fetchWithCache[PokemonDetails](cache, fullPath, "PokemonDetails")
 }

@@ -54,7 +54,7 @@ func Run() {
 			err := command.callback(&config, cleaned)
 			if err != nil {
 				// Check for clean exit
-				if errors.Is(err, CleanExit) {
+				if errors.Is(err, ErrCleanExit) {
 					os.Exit(0)
 				}
 

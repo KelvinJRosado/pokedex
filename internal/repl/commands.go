@@ -33,7 +33,7 @@ func commandHelp(config *Config, args []string) error {
 
 func commandMap(config *Config, args []string) error {
 
-	las, err := pokeapi.GetLocationAreaSlice(config.MapIndex, pokeapi.MAP_INCREMENT, config.Cache)
+	las, err := pokeapi.GetLocationAreaSlice(config.MapIndex, pokeapi.MapIncrement, config.Cache)
 	if err != nil {
 		return err
 	}
@@ -43,23 +43,23 @@ func commandMap(config *Config, args []string) error {
 	}
 
 	// Increment map pointer
-	config.MapIndex += pokeapi.MAP_INCREMENT
+	config.MapIndex += pokeapi.MapIncrement
 
 	return nil
 }
 
 func commandMapb(config *Config, args []string) error {
 	// Check base case
-	if config.MapIndex <= pokeapi.MAP_INCREMENT {
+	if config.MapIndex <= pokeapi.MapIncrement {
 		return errors.New("you're on the first page")
 	}
 
 	// Decrease map pointer
-	config.MapIndex -= (pokeapi.MAP_INCREMENT * 2)
+	config.MapIndex -= (pokeapi.MapIncrement * 2)
 
-	las, err := pokeapi.GetLocationAreaSlice(config.MapIndex, pokeapi.MAP_INCREMENT, config.Cache)
+	las, err := pokeapi.GetLocationAreaSlice(config.MapIndex, pokeapi.MapIncrement, config.Cache)
 	if err != nil {
-		config.MapIndex += (pokeapi.MAP_INCREMENT * 2) // restore map index
+		config.MapIndex += (pokeapi.MapIncrement * 2) // restore map index
 		return err
 	}
 
@@ -68,7 +68,7 @@ func commandMapb(config *Config, args []string) error {
 	}
 
 	// Increase map pointer again as we travelled
-	config.MapIndex += pokeapi.MAP_INCREMENT
+	config.MapIndex += pokeapi.MapIncrement
 
 	return nil
 }
