@@ -2,6 +2,7 @@ package pokeapi
 
 import (
 	"fmt"
+	"maps"
 	"sync"
 
 	"github.com/kelvinjrosado/pokedex/internal/pokecache"
@@ -54,4 +55,17 @@ func (c *CaughtPokemonMap) Get(key string) (PokemonDetails, bool) {
 
 	return res, true
 
+}
+
+// GetAll returns a copy of all entries in the map.
+// It acquires a read lock to prevent data races with concurrent writes.
+func (c *CaughtPokemonMap) GetAll() map[string]PokemonDetails {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	result := make(map[string]PokemonDetails, len(c.Entries))
+
+	maps.Copy(result, c.Entries)
+
+	return result
 }

@@ -94,3 +94,32 @@ func TestCaughtPokemonMapConcurrent(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestCaughtPokemonMapGetAll(t *testing.T) {
+	m := NewCaughtPokemonMap()
+
+	got := m.GetAll()
+	if len(got) != 0 {
+		t.Fatalf("expected empty map, got %d entries", len(got))
+	}
+
+	m.Add("pikachu", PokemonDetails{Name: "pikachu", BaseExperience: 112})
+	m.Add("bulbasaur", PokemonDetails{Name: "bulbasaur", BaseExperience: 64})
+
+	got = m.GetAll()
+	if len(got) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(got))
+	}
+	if got["pikachu"].Name != "pikachu" {
+		t.Errorf("expected pikachu, got %s", got["pikachu"].Name)
+	}
+	if got["bulbasaur"].Name != "bulbasaur" {
+		t.Errorf("expected bulbasaur, got %s", got["bulbasaur"].Name)
+	}
+
+	// Verify GetAll returns a copy (modifications don't affect the original).
+	got["charmander"] = PokemonDetails{Name: "charmander"}
+	if _, ok := m.Get("charmander"); ok {
+		t.Error("modification to GetAll result should not affect original map")
+	}
+}
