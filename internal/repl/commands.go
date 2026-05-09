@@ -1,6 +1,7 @@
 package repl
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"slices"
@@ -50,8 +51,7 @@ func commandMap(config *Config, args []string) error {
 func commandMapb(config *Config, args []string) error {
 	// Check base case
 	if config.MapIndex <= pokeapi.MAP_INCREMENT {
-		fmt.Println("you're on the first page")
-		return nil
+		return errors.New("you're on the first page")
 	}
 
 	// Decrease map pointer
@@ -77,8 +77,7 @@ func commandExplore(config *Config, args []string) error {
 
 	// Check for args being present
 	if len(args) < 2 {
-		fmt.Println("Insufficient args provided for \"explore\"")
-		return nil
+		return errors.New("Insufficient args provided for \"explore\"")
 	}
 
 	locationName := args[1]
@@ -102,8 +101,7 @@ func commandCatch(config *Config, args []string) error {
 
 	// Check for args being present
 	if len(args) < 2 {
-		fmt.Println("Insufficient args provided for \"catch\"")
-		return nil
+		return errors.New("Insufficient args provided for \"catch\"")
 	}
 
 	pokemonName := args[1]
@@ -137,8 +135,7 @@ func commandInspect(config *Config, args []string) error {
 
 	// Check for args being present
 	if len(args) < 2 {
-		fmt.Println("Insufficient args provided for \"inspect\"")
-		return nil
+		return errors.New("Insufficient args provided for \"inspect\"")
 	}
 
 	// Grab from caught list
@@ -172,7 +169,7 @@ func commandPokedex(config *Config, args []string) error {
 
 	// Base case: Pokedex is empty
 	if len(caught) == 0 {
-		fmt.Println("You have not caught any Pokemon yet")
+		return errors.New("You have not caught any Pokemon yet")
 	}
 
 	// Sort map

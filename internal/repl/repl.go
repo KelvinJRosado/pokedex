@@ -58,7 +58,7 @@ func Run() {
 					os.Exit(0)
 				}
 
-				fmt.Printf("Error: %v\n", err.Error())
+				fmt.Printf("Error: %v\n", err)
 			}
 
 		}
