@@ -2,7 +2,6 @@ package pokeapi
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -38,7 +37,7 @@ func GetLocationAreaSlice(startId, count int, cache *pokecache.Cache) (LocationA
 		}
 
 		if res.StatusCode > 299 {
-			return LocationAreaList{}, errors.New("LocationArea API call failed")
+			return LocationAreaList{}, fmt.Errorf("LocationArea API call failed with status %d: %s", res.StatusCode, data)
 		}
 
 		// Save response to cache
@@ -83,8 +82,7 @@ func GetLocationAreaDetails(name string, cache *pokecache.Cache) (LocationAreaDe
 		}
 
 		if res.StatusCode > 299 {
-			fmt.Printf("LocationArea API call failed with status code: %d and\ndata: %s\n", res.StatusCode, data)
-			return LocationAreaDetails{}, errors.New("LocationArea API call failed")
+			return LocationAreaDetails{}, fmt.Errorf("LocationArea API call failed with status %d: %s", res.StatusCode, data)
 		}
 
 		// Save response to cache
