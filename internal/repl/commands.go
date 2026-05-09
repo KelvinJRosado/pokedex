@@ -3,7 +3,7 @@ package repl
 import (
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"slices"
 	"strings"
 
@@ -115,7 +115,7 @@ func commandCatch(config *Config, args []string) error {
 	fmt.Printf("Throwing a Pokeball at %v...\n", pokemonDetails.Name)
 
 	// Check if caught
-	roll := rand.Intn(700)              // Get random number from 0 to max
+	roll := rand.IntN(maxCatchRate)     // Get random number from 0 to max
 	be := pokemonDetails.BaseExperience // Get Pokemon base experience for roll
 
 	if roll >= be {
