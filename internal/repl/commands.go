@@ -12,7 +12,7 @@ import (
 
 func commandExit(config *Config, args []string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
-	return CleanExit
+	return ErrCleanExit
 }
 
 func commandHelp(config *Config, args []string) error {
