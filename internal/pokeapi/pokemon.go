@@ -27,16 +27,14 @@ func GetPokemonDetails(name string, cache *pokecache.Cache) (PokemonDetails, err
 		// Built GET request
 		res, err := http.Get(fullPath)
 		if err != nil {
-			fmt.Printf("Error calling Pokemon details API: %v\n", err.Error())
 			return PokemonDetails{}, err
 		}
 		defer res.Body.Close()
 
 		// Read and parse response
-		data, err = io.ReadAll(res.Body)
+		data, err := io.ReadAll(res.Body)
 		if err != nil {
-			fmt.Printf("Failed to parse response body: %v\n", err.Error())
-			return PokemonDetails{}, errors.New("Pokemon details API response could not be parsed")
+			return PokemonDetails{}, err
 		}
 
 		if res.StatusCode > 299 {
@@ -52,8 +50,7 @@ func GetPokemonDetails(name string, cache *pokecache.Cache) (PokemonDetails, err
 	var pokemonData PokemonDetails
 	err := json.Unmarshal(data, &pokemonData)
 	if err != nil {
-		fmt.Printf("Failed to unmarshal data: %v\n", err.Error())
-		return PokemonDetails{}, errors.New("Pokemon details API response could not be parsed")
+		return PokemonDetails{}, err
 	}
 
 	return pokemonData, nil

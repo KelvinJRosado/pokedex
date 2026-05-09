@@ -34,7 +34,6 @@ func commandMap(config *Config, args []string) error {
 
 	las, err := pokeapi.GetLocationAreaSlice(config.MapIndex, pokeapi.MAP_INCREMENT, config.Cache)
 	if err != nil {
-		fmt.Printf("Failed to get location area info: %v\n", err.Error())
 		return err
 	}
 
@@ -60,7 +59,6 @@ func commandMapb(config *Config, args []string) error {
 
 	las, err := pokeapi.GetLocationAreaSlice(config.MapIndex, pokeapi.MAP_INCREMENT, config.Cache)
 	if err != nil {
-		fmt.Printf("Failed to get location area info: %v\n", err.Error())
 		config.MapIndex += (pokeapi.MAP_INCREMENT * 2) // restore map index
 		return err
 	}
@@ -88,7 +86,6 @@ func commandExplore(config *Config, args []string) error {
 
 	details, err := pokeapi.GetLocationAreaDetails(locationName, config.Cache)
 	if err != nil {
-		fmt.Printf("Failed to get location area details: %v\n", err.Error())
 		return err
 	}
 
@@ -115,7 +112,6 @@ func commandCatch(config *Config, args []string) error {
 	// Get details
 	pokemonDetails, err := pokeapi.GetPokemonDetails(pokemonName, config.Cache)
 	if err != nil {
-		fmt.Printf("Failed to get pokemon details: %v\n", err.Error())
 		return err
 	}
 
