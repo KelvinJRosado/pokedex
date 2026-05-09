@@ -10,7 +10,7 @@ import (
 )
 
 func fetchWithCache[T any](cache *pokecache.Cache, fullPath, label string) (T, error) {
-	// Init respose
+	// Init response
 	var response T
 
 	// Store raw data from response
