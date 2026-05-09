@@ -165,7 +165,7 @@ func commandInspect(config *Config, args []string) error {
 
 func commandPokedex(config *Config, args []string) error {
 
-	caught := config.CaughtPokemonMap.Entries
+	caught := config.CaughtPokemonMap.GetAll()
 
 	// Base case: Pokedex is empty
 	if len(caught) == 0 {
