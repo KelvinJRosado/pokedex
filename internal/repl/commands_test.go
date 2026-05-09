@@ -1,11 +1,10 @@
 package repl
 
 import (
+	"bytes"
 	"errors"
-	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -14,70 +13,54 @@ import (
 	"github.com/kelvinjrosado/pokedex/internal/pokecache"
 )
 
-// captureStdout runs fn with os.Stdout redirected to a pipe and returns the
-// captured output. Tests use it to assert on user-facing prints without
-// coupling to internal formatting helpers.
-func captureStdout(t *testing.T, fn func()) string {
-	t.Helper()
-	orig := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("pipe: %v", err)
-	}
-	os.Stdout = w
-	defer func() { os.Stdout = orig }()
-
-	done := make(chan string, 1)
-	go func() {
-		buf, _ := io.ReadAll(r)
-		done <- string(buf)
-	}()
-
-	fn()
-	_ = w.Close()
-	return <-done
-}
-
-func newTestConfig(t *testing.T) *Config {
+// newTestConfig builds a Config wired to an in-memory buffer so tests can
+// assert on output without touching os.Stdout.
+func newTestConfig(t *testing.T) (*Config, *bytes.Buffer) {
 	t.Helper()
 	cache := pokecache.NewCache(time.Hour)
 	t.Cleanup(cache.Stop)
+	var buf bytes.Buffer
 	return &Config{
 		Cache:            cache,
 		CaughtPokemonMap: pokeapi.NewCaughtPokemonMap(),
-	}
+		Writer:           &buf,
+	}, &buf
+}
+
+// withTestAPI points pokeapi at an httptest.Server for the duration of the
+// calling test and restores the original base URL via t.Cleanup.
+func withTestAPI(t *testing.T, h http.HandlerFunc) {
+	t.Helper()
+	srv := httptest.NewServer(h)
+	t.Cleanup(srv.Close)
+	t.Cleanup(pokeapi.SetBaseURLForTest(srv.URL + "/"))
 }
 
 func TestCommandExit(t *testing.T) {
-	cfg := newTestConfig(t)
-	out := captureStdout(t, func() {
-		err := commandExit(cfg, nil)
-		if !errors.Is(err, ErrCleanExit) {
-			t.Fatalf("expected ErrCleanExit, got %v", err)
-		}
-	})
-	if !strings.Contains(out, "Closing the Pokedex") {
-		t.Fatalf("expected farewell message, got: %q", out)
+	cfg, out := newTestConfig(t)
+	err := commandExit(cfg, nil)
+	if !errors.Is(err, ErrCleanExit) {
+		t.Fatalf("expected ErrCleanExit, got %v", err)
+	}
+	if !strings.Contains(out.String(), "Closing the Pokedex") {
+		t.Fatalf("expected farewell message, got: %q", out.String())
 	}
 }
 
 func TestCommandHelpListsAllCommandsSorted(t *testing.T) {
-	cfg := newTestConfig(t)
-	out := captureStdout(t, func() {
-		if err := commandHelp(cfg, nil); err != nil {
-			t.Fatalf("commandHelp returned error: %v", err)
-		}
-	})
-	// Every registered command name must appear.
+	cfg, out := newTestConfig(t)
+	if err := commandHelp(cfg, nil); err != nil {
+		t.Fatalf("commandHelp returned error: %v", err)
+	}
+	got := out.String()
 	for _, cmd := range getAllCommands() {
-		if !strings.Contains(out, cmd.name+":") {
-			t.Errorf("expected help output to mention command %q; got:\n%s", cmd.name, out)
+		if !strings.Contains(got, cmd.name+":") {
+			t.Errorf("expected help output to mention command %q; got:\n%s", cmd.name, got)
 		}
 	}
-	// Output should be alphabetically sorted by command name.
-	idxCatch := strings.Index(out, "catch:")
-	idxExit := strings.Index(out, "exit:")
-	idxMap := strings.Index(out, "map:")
+	idxCatch := strings.Index(got, "catch:")
+	idxExit := strings.Index(got, "exit:")
+	idxMap := strings.Index(got, "map:")
 	if !(idxCatch < idxExit && idxExit < idxMap) {
 		t.Errorf("expected commands in alphabetical order, got positions catch=%d exit=%d map=%d", idxCatch, idxExit, idxMap)
 	}
@@ -106,20 +89,16 @@ func TestGetCommandUnknown(t *testing.T) {
 }
 
 func TestCommandMapAdvancesIndexAndPrintsResults(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	withTestAPI(t, func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{"results":[{"name":"area-a","url":"x"},{"name":"area-b","url":"y"}]}`))
-	}))
-	defer srv.Close()
-	defer pokeapi.SetBaseURLForTest(srv.URL + "/")()
-
-	cfg := newTestConfig(t)
-	out := captureStdout(t, func() {
-		if err := commandMap(cfg, nil); err != nil {
-			t.Fatalf("commandMap returned error: %v", err)
-		}
 	})
-	if !strings.Contains(out, "area-a") || !strings.Contains(out, "area-b") {
-		t.Errorf("expected location names in output, got: %q", out)
+
+	cfg, out := newTestConfig(t)
+	if err := commandMap(cfg, nil); err != nil {
+		t.Fatalf("commandMap returned error: %v", err)
+	}
+	if !strings.Contains(out.String(), "area-a") || !strings.Contains(out.String(), "area-b") {
+		t.Errorf("expected location names in output, got: %q", out.String())
 	}
 	if cfg.MapIndex != pokeapi.MapIncrement {
 		t.Errorf("expected MapIndex to advance to %d, got %d", pokeapi.MapIncrement, cfg.MapIndex)
@@ -127,13 +106,11 @@ func TestCommandMapAdvancesIndexAndPrintsResults(t *testing.T) {
 }
 
 func TestCommandMapPropagatesError(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	withTestAPI(t, func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "boom", http.StatusInternalServerError)
-	}))
-	defer srv.Close()
-	defer pokeapi.SetBaseURLForTest(srv.URL + "/")()
+	})
 
-	cfg := newTestConfig(t)
+	cfg, _ := newTestConfig(t)
 	if err := commandMap(cfg, nil); err == nil {
 		t.Fatal("expected error from commandMap on 500")
 	}
@@ -143,7 +120,7 @@ func TestCommandMapPropagatesError(t *testing.T) {
 }
 
 func TestCommandMapbFirstPageReturnsError(t *testing.T) {
-	cfg := newTestConfig(t)
+	cfg, _ := newTestConfig(t)
 	cfg.MapIndex = pokeapi.MapIncrement // simulate having only fetched the first page
 	err := commandMapb(cfg, nil)
 	if err == nil || !strings.Contains(err.Error(), "first page") {
@@ -152,21 +129,17 @@ func TestCommandMapbFirstPageReturnsError(t *testing.T) {
 }
 
 func TestCommandMapbStepsBack(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	withTestAPI(t, func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{"results":[{"name":"prev-area","url":"x"}]}`))
-	}))
-	defer srv.Close()
-	defer pokeapi.SetBaseURLForTest(srv.URL + "/")()
-
-	cfg := newTestConfig(t)
-	cfg.MapIndex = pokeapi.MapIncrement * 3 // user has paged forward
-	out := captureStdout(t, func() {
-		if err := commandMapb(cfg, nil); err != nil {
-			t.Fatalf("commandMapb returned error: %v", err)
-		}
 	})
-	if !strings.Contains(out, "prev-area") {
-		t.Errorf("expected prev-area in output, got: %q", out)
+
+	cfg, out := newTestConfig(t)
+	cfg.MapIndex = pokeapi.MapIncrement * 3 // user has paged forward
+	if err := commandMapb(cfg, nil); err != nil {
+		t.Fatalf("commandMapb returned error: %v", err)
+	}
+	if !strings.Contains(out.String(), "prev-area") {
+		t.Errorf("expected prev-area in output, got: %q", out.String())
 	}
 	// Net effect of mapb is: index moves back by one page (MapIncrement).
 	if want := pokeapi.MapIncrement * 2; cfg.MapIndex != want {
@@ -175,13 +148,11 @@ func TestCommandMapbStepsBack(t *testing.T) {
 }
 
 func TestCommandMapbRestoresIndexOnError(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	withTestAPI(t, func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "boom", http.StatusInternalServerError)
-	}))
-	defer srv.Close()
-	defer pokeapi.SetBaseURLForTest(srv.URL + "/")()
+	})
 
-	cfg := newTestConfig(t)
+	cfg, _ := newTestConfig(t)
 	cfg.MapIndex = pokeapi.MapIncrement * 3
 	if err := commandMapb(cfg, nil); err == nil {
 		t.Fatal("expected error")
@@ -191,15 +162,24 @@ func TestCommandMapbRestoresIndexOnError(t *testing.T) {
 	}
 }
 
-func TestCommandExploreRequiresArg(t *testing.T) {
-	cfg := newTestConfig(t)
-	if err := commandExplore(cfg, []string{"explore"}); err == nil {
-		t.Fatal("expected error when no location name is provided")
+func TestCommandRequiresArg(t *testing.T) {
+	cases := map[string]func(*Config, []string) error{
+		"explore": commandExplore,
+		"catch":   commandCatch,
+		"inspect": commandInspect,
+	}
+	for name, fn := range cases {
+		t.Run(name, func(t *testing.T) {
+			cfg, _ := newTestConfig(t)
+			if err := fn(cfg, []string{name}); err == nil {
+				t.Fatalf("expected error when no argument is provided to %s", name)
+			}
+		})
 	}
 }
 
 func TestCommandExploreListsEncounters(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	withTestAPI(t, func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{
 			"id": 1,
 			"name": "test-area",
@@ -208,58 +188,40 @@ func TestCommandExploreListsEncounters(t *testing.T) {
 				{"pokemon": {"name": "pidgey", "url": "y"}}
 			]
 		}`))
-	}))
-	defer srv.Close()
-	defer pokeapi.SetBaseURLForTest(srv.URL + "/")()
-
-	cfg := newTestConfig(t)
-	out := captureStdout(t, func() {
-		if err := commandExplore(cfg, []string{"explore", "test-area"}); err != nil {
-			t.Fatalf("commandExplore returned error: %v", err)
-		}
 	})
-	if !strings.Contains(out, "rattata") || !strings.Contains(out, "pidgey") {
-		t.Errorf("expected encounters in output, got: %q", out)
+
+	cfg, out := newTestConfig(t)
+	if err := commandExplore(cfg, []string{"explore", "test-area"}); err != nil {
+		t.Fatalf("commandExplore returned error: %v", err)
+	}
+	if !strings.Contains(out.String(), "rattata") || !strings.Contains(out.String(), "pidgey") {
+		t.Errorf("expected encounters in output, got: %q", out.String())
 	}
 }
 
 func TestCommandExploreAPIError(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	withTestAPI(t, func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
-	}))
-	defer srv.Close()
-	defer pokeapi.SetBaseURLForTest(srv.URL + "/")()
+	})
 
-	cfg := newTestConfig(t)
-	err := commandExplore(cfg, []string{"explore", "bad-area"})
-	if err == nil {
+	cfg, _ := newTestConfig(t)
+	if err := commandExplore(cfg, []string{"explore", "bad-area"}); err == nil {
 		t.Fatal("expected error from commandExplore when API fails")
-	}
-}
-
-func TestCommandCatchRequiresArg(t *testing.T) {
-	cfg := newTestConfig(t)
-	if err := commandCatch(cfg, []string{"catch"}); err == nil {
-		t.Fatal("expected error when no pokemon name is provided")
 	}
 }
 
 func TestCommandCatchSuccess(t *testing.T) {
 	// BaseExperience 0 ⇒ rand.IntN(maxCatchRate) >= 0 is always true ⇒ always caught.
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	withTestAPI(t, func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{"name":"weedle","base_experience":0}`))
-	}))
-	defer srv.Close()
-	defer pokeapi.SetBaseURLForTest(srv.URL + "/")()
-
-	cfg := newTestConfig(t)
-	out := captureStdout(t, func() {
-		if err := commandCatch(cfg, []string{"catch", "weedle"}); err != nil {
-			t.Fatalf("commandCatch returned error: %v", err)
-		}
 	})
-	if !strings.Contains(out, "was caught") {
-		t.Errorf("expected catch success message, got: %q", out)
+
+	cfg, out := newTestConfig(t)
+	if err := commandCatch(cfg, []string{"catch", "weedle"}); err != nil {
+		t.Fatalf("commandCatch returned error: %v", err)
+	}
+	if !strings.Contains(out.String(), "was caught") {
+		t.Errorf("expected catch success message, got: %q", out.String())
 	}
 	if _, ok := cfg.CaughtPokemonMap.Get("weedle"); !ok {
 		t.Error("expected weedle to be added to caught map")
@@ -268,20 +230,16 @@ func TestCommandCatchSuccess(t *testing.T) {
 
 func TestCommandCatchEscape(t *testing.T) {
 	// BaseExperience == maxCatchRate ⇒ rand.IntN(maxCatchRate) is always < it ⇒ always escapes.
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	withTestAPI(t, func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{"name":"mewtwo","base_experience":700}`))
-	}))
-	defer srv.Close()
-	defer pokeapi.SetBaseURLForTest(srv.URL + "/")()
-
-	cfg := newTestConfig(t)
-	out := captureStdout(t, func() {
-		if err := commandCatch(cfg, []string{"catch", "mewtwo"}); err != nil {
-			t.Fatalf("commandCatch returned error: %v", err)
-		}
 	})
-	if !strings.Contains(out, "escaped") {
-		t.Errorf("expected escape message, got: %q", out)
+
+	cfg, out := newTestConfig(t)
+	if err := commandCatch(cfg, []string{"catch", "mewtwo"}); err != nil {
+		t.Fatalf("commandCatch returned error: %v", err)
+	}
+	if !strings.Contains(out.String(), "escaped") {
+		t.Errorf("expected escape message, got: %q", out.String())
 	}
 	if _, ok := cfg.CaughtPokemonMap.Get("mewtwo"); ok {
 		t.Error("expected mewtwo to NOT be added to caught map")
@@ -289,40 +247,28 @@ func TestCommandCatchEscape(t *testing.T) {
 }
 
 func TestCommandCatchAPIError(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	withTestAPI(t, func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not found", http.StatusNotFound)
-	}))
-	defer srv.Close()
-	defer pokeapi.SetBaseURLForTest(srv.URL + "/")()
+	})
 
-	cfg := newTestConfig(t)
-	err := commandCatch(cfg, []string{"catch", "missingno"})
-	if err == nil {
+	cfg, _ := newTestConfig(t)
+	if err := commandCatch(cfg, []string{"catch", "missingno"}); err == nil {
 		t.Fatal("expected error from commandCatch when API fails")
 	}
 }
 
-func TestCommandInspectRequiresArg(t *testing.T) {
-	cfg := newTestConfig(t)
-	if err := commandInspect(cfg, []string{"inspect"}); err == nil {
-		t.Fatal("expected error when no pokemon name is provided")
-	}
-}
-
 func TestCommandInspectMissNotifiesUser(t *testing.T) {
-	cfg := newTestConfig(t)
-	out := captureStdout(t, func() {
-		if err := commandInspect(cfg, []string{"inspect", "missingno"}); err != nil {
-			t.Fatalf("commandInspect should not return error on miss, got: %v", err)
-		}
-	})
-	if !strings.Contains(out, "have not caught") {
-		t.Errorf("expected miss message, got: %q", out)
+	cfg, out := newTestConfig(t)
+	if err := commandInspect(cfg, []string{"inspect", "missingno"}); err != nil {
+		t.Fatalf("commandInspect should not return error on miss, got: %v", err)
+	}
+	if !strings.Contains(out.String(), "have not caught") {
+		t.Errorf("expected miss message, got: %q", out.String())
 	}
 }
 
 func TestCommandInspectPrintsDetails(t *testing.T) {
-	cfg := newTestConfig(t)
+	cfg, out := newTestConfig(t)
 	cfg.CaughtPokemonMap.Add("eevee", pokeapi.PokemonDetails{
 		Name:   "eevee",
 		Height: 3,
@@ -335,42 +281,39 @@ func TestCommandInspectPrintsDetails(t *testing.T) {
 		},
 	})
 
-	out := captureStdout(t, func() {
-		if err := commandInspect(cfg, []string{"inspect", "eevee"}); err != nil {
-			t.Fatalf("commandInspect returned error: %v", err)
-		}
-	})
+	if err := commandInspect(cfg, []string{"inspect", "eevee"}); err != nil {
+		t.Fatalf("commandInspect returned error: %v", err)
+	}
 	for _, want := range []string{"eevee", "hp", "normal", "55"} {
-		if !strings.Contains(out, want) {
-			t.Errorf("expected output to contain %q, got: %q", want, out)
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("expected output to contain %q, got: %q", want, out.String())
 		}
 	}
 }
 
 func TestCommandPokedexEmpty(t *testing.T) {
-	cfg := newTestConfig(t)
+	cfg, _ := newTestConfig(t)
 	if err := commandPokedex(cfg, nil); err == nil {
 		t.Fatal("expected error when pokedex is empty")
 	}
 }
 
 func TestCommandPokedexListsCaughtSorted(t *testing.T) {
-	cfg := newTestConfig(t)
+	cfg, out := newTestConfig(t)
 	cfg.CaughtPokemonMap.Add("zubat", pokeapi.PokemonDetails{Name: "zubat"})
 	cfg.CaughtPokemonMap.Add("abra", pokeapi.PokemonDetails{Name: "abra"})
 	cfg.CaughtPokemonMap.Add("magikarp", pokeapi.PokemonDetails{Name: "magikarp"})
 
-	out := captureStdout(t, func() {
-		if err := commandPokedex(cfg, nil); err != nil {
-			t.Fatalf("commandPokedex returned error: %v", err)
-		}
-	})
+	if err := commandPokedex(cfg, nil); err != nil {
+		t.Fatalf("commandPokedex returned error: %v", err)
+	}
 
-	idxAbra := strings.Index(out, "abra")
-	idxMagikarp := strings.Index(out, "magikarp")
-	idxZubat := strings.Index(out, "zubat")
+	got := out.String()
+	idxAbra := strings.Index(got, "abra")
+	idxMagikarp := strings.Index(got, "magikarp")
+	idxZubat := strings.Index(got, "zubat")
 	if idxAbra < 0 || idxMagikarp < 0 || idxZubat < 0 {
-		t.Fatalf("expected all three names in output, got: %q", out)
+		t.Fatalf("expected all three names in output, got: %q", got)
 	}
 	if !(idxAbra < idxMagikarp && idxMagikarp < idxZubat) {
 		t.Errorf("expected alphabetical order, got positions abra=%d magikarp=%d zubat=%d", idxAbra, idxMagikarp, idxZubat)
