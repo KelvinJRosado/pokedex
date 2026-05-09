@@ -183,7 +183,7 @@ func commandPokedex(config *Config, args []string) error {
 	}
 	slices.Sort(keys)
 
-	for k, _ := range caught {
+	for _, k := range keys {
 		fmt.Printf(" - %v\n", k)
 	}
 
