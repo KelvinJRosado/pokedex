@@ -40,8 +40,10 @@ func captureStdout(t *testing.T, fn func()) string {
 
 func newTestConfig(t *testing.T) *Config {
 	t.Helper()
+	cache := pokecache.NewCache(time.Hour)
+	t.Cleanup(cache.Stop)
 	return &Config{
-		Cache:            pokecache.NewCache(time.Hour),
+		Cache:            cache,
 		CaughtPokemonMap: pokeapi.NewCaughtPokemonMap(),
 	}
 }
@@ -221,6 +223,20 @@ func TestCommandExploreListsEncounters(t *testing.T) {
 	}
 }
 
+func TestCommandExploreAPIError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+	defer pokeapi.SetBaseURLForTest(srv.URL + "/")()
+
+	cfg := newTestConfig(t)
+	err := commandExplore(cfg, []string{"explore", "bad-area"})
+	if err == nil {
+		t.Fatal("expected error from commandExplore when API fails")
+	}
+}
+
 func TestCommandCatchRequiresArg(t *testing.T) {
 	cfg := newTestConfig(t)
 	if err := commandCatch(cfg, []string{"catch"}); err == nil {
@@ -269,6 +285,20 @@ func TestCommandCatchEscape(t *testing.T) {
 	}
 	if _, ok := cfg.CaughtPokemonMap.Get("mewtwo"); ok {
 		t.Error("expected mewtwo to NOT be added to caught map")
+	}
+}
+
+func TestCommandCatchAPIError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "not found", http.StatusNotFound)
+	}))
+	defer srv.Close()
+	defer pokeapi.SetBaseURLForTest(srv.URL + "/")()
+
+	cfg := newTestConfig(t)
+	err := commandCatch(cfg, []string{"catch", "missingno"})
+	if err == nil {
+		t.Fatal("expected error from commandCatch when API fails")
 	}
 }
 
