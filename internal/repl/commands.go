@@ -68,7 +68,6 @@ func commandMapb(config *Config, args []string) error {
 	}
 
 	// Increase map pointer again as we travelled
-	// 	// Decrease map pointer
 	config.MapIndex += pokeapi.MAP_INCREMENT
 
 	return nil
