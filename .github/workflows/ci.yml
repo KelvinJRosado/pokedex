@@ -27,8 +27,17 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: Install shadow analyzer
+        run: go install golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow@latest
+
+      - name: Vet (shadow)
+        run: go vet -vettool=$(go env GOPATH)/bin/shadow ./...
+
       - name: Test
-        run: go test -race ./...
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Coverage report
+        run: go tool cover -func=coverage.out
 
       - name: Build
         run: go build ./...
