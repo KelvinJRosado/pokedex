@@ -11,13 +11,13 @@ import (
 )
 
 func commandExit(config *Config, args []string) error {
-	fmt.Println("Closing the Pokedex... Goodbye!")
+	fmt.Fprintln(config.Writer, "Closing the Pokedex... Goodbye!")
 	return ErrCleanExit
 }
 
 func commandHelp(config *Config, args []string) error {
-	fmt.Println("Welcome to the Pokedex!")
-	fmt.Print("Usage:\n\n")
+	fmt.Fprintln(config.Writer, "Welcome to the Pokedex!")
+	fmt.Fprint(config.Writer, "Usage:\n\n")
 
 	cmds := getAllCommands()
 	slices.SortFunc(cmds, func(a, b cliCommand) int {
@@ -25,7 +25,7 @@ func commandHelp(config *Config, args []string) error {
 	})
 
 	for _, cmd := range cmds {
-		fmt.Printf("%v: %v\n", cmd.name, cmd.description)
+		fmt.Fprintf(config.Writer, "%v: %v\n", cmd.name, cmd.description)
 	}
 
 	return nil
@@ -39,7 +39,7 @@ func commandMap(config *Config, args []string) error {
 	}
 
 	for _, la := range las.Results {
-		fmt.Println(la.Name)
+		fmt.Fprintln(config.Writer, la.Name)
 	}
 
 	// Increment map pointer
@@ -64,7 +64,7 @@ func commandMapb(config *Config, args []string) error {
 	}
 
 	for _, la := range las.Results {
-		fmt.Println(la.Name)
+		fmt.Fprintln(config.Writer, la.Name)
 	}
 
 	// Increase map pointer again as we travelled
@@ -87,11 +87,11 @@ func commandExplore(config *Config, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Exploring %v...\n", locationName)
-	fmt.Println("Found Pokemon:")
+	fmt.Fprintf(config.Writer, "Exploring %v...\n", locationName)
+	fmt.Fprintln(config.Writer, "Found Pokemon:")
 
 	for _, v := range details.Encounters {
-		fmt.Printf(" - %v\n", v.Pokemon.Name)
+		fmt.Fprintf(config.Writer, " - %v\n", v.Pokemon.Name)
 	}
 
 	return nil
@@ -112,7 +112,7 @@ func commandCatch(config *Config, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Throwing a Pokeball at %v...\n", pokemonDetails.Name)
+	fmt.Fprintf(config.Writer, "Throwing a Pokeball at %v...\n", pokemonDetails.Name)
 
 	// Check if caught
 	roll := rand.IntN(maxCatchRate)     // Get random number from 0 to max
@@ -120,12 +120,12 @@ func commandCatch(config *Config, args []string) error {
 
 	if roll >= be {
 		// Caught
-		fmt.Printf("%v was caught!\n", pokemonDetails.Name)
+		fmt.Fprintf(config.Writer, "%v was caught!\n", pokemonDetails.Name)
 
 		// Save to caught list
 		config.CaughtPokemonMap.Add(pokemonDetails.Name, pokemonDetails)
 	} else {
-		fmt.Printf("%v escaped!\n", pokemonDetails.Name)
+		fmt.Fprintf(config.Writer, "%v escaped!\n", pokemonDetails.Name)
 	}
 
 	return nil
@@ -143,21 +143,21 @@ func commandInspect(config *Config, args []string) error {
 	val, ok := config.CaughtPokemonMap.Get(name)
 
 	if !ok {
-		fmt.Println("you have not caught that pokemon")
+		fmt.Fprintln(config.Writer, "you have not caught that pokemon")
 		return nil
 	}
 
 	// If caught, print info
-	fmt.Printf("Name: %v\n", val.Name)
-	fmt.Printf("Height: %d\n", val.Height)
-	fmt.Printf("Weight: %d\n", val.Weight)
-	fmt.Println("Stats:")
+	fmt.Fprintf(config.Writer, "Name: %v\n", val.Name)
+	fmt.Fprintf(config.Writer, "Height: %d\n", val.Height)
+	fmt.Fprintf(config.Writer, "Weight: %d\n", val.Weight)
+	fmt.Fprintln(config.Writer, "Stats:")
 	for _, s := range val.Stats {
-		fmt.Printf("  -%v: %d\n", s.Stat.Name, s.BaseStat)
+		fmt.Fprintf(config.Writer, "  -%v: %d\n", s.Stat.Name, s.BaseStat)
 	}
-	fmt.Println("Types:")
+	fmt.Fprintln(config.Writer, "Types:")
 	for _, t := range val.Types {
-		fmt.Printf("  - %v\n", t.Type.Name)
+		fmt.Fprintf(config.Writer, "  - %v\n", t.Type.Name)
 	}
 
 	return nil
@@ -180,7 +180,7 @@ func commandPokedex(config *Config, args []string) error {
 	slices.Sort(keys)
 
 	for _, k := range keys {
-		fmt.Printf(" - %v\n", k)
+		fmt.Fprintf(config.Writer, " - %v\n", k)
 	}
 
 	return nil

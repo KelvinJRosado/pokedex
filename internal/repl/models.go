@@ -2,6 +2,7 @@ package repl
 
 import (
 	"errors"
+	"io"
 
 	"github.com/kelvinjrosado/pokedex/internal/pokeapi"
 	"github.com/kelvinjrosado/pokedex/internal/pokecache"
@@ -11,6 +12,7 @@ type Config struct {
 	Cache            *pokecache.Cache
 	CaughtPokemonMap *pokeapi.CaughtPokemonMap
 	MapIndex         int
+	Writer           io.Writer
 }
 
 // Struct defining the format for a CLI command definition
