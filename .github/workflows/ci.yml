@@ -38,7 +38,8 @@ jobs:
       - name: Module hygiene
         run: |
           go mod tidy
-          if ! git diff --exit-code go.mod go.sum; then
+          if [ -n "$(git status --porcelain go.mod go.sum)" ]; then
+            git diff go.mod go.sum 2>/dev/null || true
             echo "go.mod or go.sum changed. Run 'go mod tidy' locally and commit the result."
             exit 1
           fi
