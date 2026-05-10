@@ -7,13 +7,14 @@ import (
 	"io"
 	"time"
 
+	"github.com/kelvinjrosado/pokedex/internal/logger"
 	"github.com/kelvinjrosado/pokedex/internal/pokeapi"
 	"github.com/kelvinjrosado/pokedex/internal/pokecache"
 )
 
 // Run reads commands from in and writes prompts and output to out, returning
 // when the user runs `exit`, when in reaches EOF, or when the scanner errors.
-func Run(in io.Reader, out io.Writer) {
+func Run(in io.Reader, out io.Writer, logger logger.CustomLogger) {
 	scanner := bufio.NewScanner(in)
 
 	cache := pokecache.NewCache(time.Second * 5)

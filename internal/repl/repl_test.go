@@ -4,13 +4,22 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"log"
 	"strings"
 	"testing"
+
+	"github.com/kelvinjrosado/pokedex/internal/logger"
 )
 
 func TestRunCleanExit(t *testing.T) {
+	logger, err := logger.NewLogger()
+	if err != nil {
+		log.Fatal("Unable to start logger")
+	}
+	defer logger.Close()
+
 	var out bytes.Buffer
-	Run(strings.NewReader("exit\n"), &out)
+	Run(strings.NewReader("exit\n"), &out, *logger)
 
 	got := out.String()
 	if !strings.Contains(got, "Closing the Pokedex") {
@@ -23,8 +32,15 @@ func TestRunCleanExit(t *testing.T) {
 }
 
 func TestRunUnknownCommand(t *testing.T) {
+
+	logger, err := logger.NewLogger()
+	if err != nil {
+		log.Fatal("Unable to start logger")
+	}
+	defer logger.Close()
+
 	var out bytes.Buffer
-	Run(strings.NewReader("nonsense\nexit\n"), &out)
+	Run(strings.NewReader("nonsense\nexit\n"), &out, *logger)
 
 	if !strings.Contains(out.String(), "Unknown command") {
 		t.Errorf("expected 'Unknown command' in output, got: %q", out.String())
@@ -32,8 +48,15 @@ func TestRunUnknownCommand(t *testing.T) {
 }
 
 func TestRunSkipsBlankLines(t *testing.T) {
+
+	logger, err := logger.NewLogger()
+	if err != nil {
+		log.Fatal("Unable to start logger")
+	}
+	defer logger.Close()
+
 	var out bytes.Buffer
-	Run(strings.NewReader("\n   \nexit\n"), &out)
+	Run(strings.NewReader("\n   \nexit\n"), &out, *logger)
 
 	if strings.Contains(out.String(), "Unknown command") {
 		t.Errorf("blank lines should not be treated as unknown commands, got: %q", out.String())
@@ -44,9 +67,16 @@ func TestRunSkipsBlankLines(t *testing.T) {
 }
 
 func TestRunSurfacesCommandError(t *testing.T) {
+
+	logger, err := logger.NewLogger()
+	if err != nil {
+		log.Fatal("Unable to start logger")
+	}
+	defer logger.Close()
+
 	// `mapb` on the first page errors before hitting the network.
 	var out bytes.Buffer
-	Run(strings.NewReader("mapb\nexit\n"), &out)
+	Run(strings.NewReader("mapb\nexit\n"), &out, *logger)
 
 	if !strings.Contains(out.String(), "Error:") {
 		t.Errorf("expected error message in output, got: %q", out.String())
@@ -57,9 +87,16 @@ func TestRunSurfacesCommandError(t *testing.T) {
 }
 
 func TestRunPromptsBetweenCommands(t *testing.T) {
+
+	logger, err := logger.NewLogger()
+	if err != nil {
+		log.Fatal("Unable to start logger")
+	}
+	defer logger.Close()
+
 	var out bytes.Buffer
 	// help prints a lot of lines but should not affect prompt count.
-	Run(strings.NewReader("help\nnonsense\nexit\n"), &out)
+	Run(strings.NewReader("help\nnonsense\nexit\n"), &out, *logger)
 
 	// Initial prompt + one before each of the 2 non-exit lines processed = 3 prompts.
 	// (The exit handler returns before printing another.)
@@ -69,9 +106,15 @@ func TestRunPromptsBetweenCommands(t *testing.T) {
 }
 
 func TestRunReturnsOnEOF(t *testing.T) {
+	logger, err := logger.NewLogger()
+	if err != nil {
+		log.Fatal("Unable to start logger")
+	}
+	defer logger.Close()
+
 	var out bytes.Buffer
 	// No newline, just EOF after a known command.
-	Run(strings.NewReader("help"), &out)
+	Run(strings.NewReader("help"), &out, *logger)
 
 	if !strings.Contains(out.String(), "help:") {
 		t.Errorf("expected help command to have run before EOF, got: %q", out.String())
@@ -85,8 +128,14 @@ type errReader struct{}
 func (errReader) Read(p []byte) (int, error) { return 0, errors.New("synthetic read failure") }
 
 func TestRunReportsScannerError(t *testing.T) {
+	logger, err := logger.NewLogger()
+	if err != nil {
+		log.Fatal("Unable to start logger")
+	}
+	defer logger.Close()
+
 	var out bytes.Buffer
-	Run(errReader{}, &out)
+	Run(errReader{}, &out, *logger)
 
 	if !strings.Contains(out.String(), "Invalid input") {
 		t.Errorf("expected scanner error to be reported, got: %q", out.String())
