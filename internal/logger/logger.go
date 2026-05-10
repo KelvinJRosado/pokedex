@@ -9,14 +9,14 @@ import (
 
 // Holds both a stdio logger + file logger
 type CustomLogger struct {
-	consoleWriter *slog.Logger
-	logFileWriter *slog.Logger
+	consoleLogger *slog.Logger
+	fileLogger    *slog.Logger
 	file          *os.File
 }
 
 func NewLogger() (*CustomLogger, error) {
 
-	// Get file location from env var, or use default
+	// TODO: Get file location from env var, or use default
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -48,8 +48,11 @@ func NewLogger() (*CustomLogger, error) {
 	textLogger := slog.New(textHandler)
 	jsonLogger := slog.New(jsonHandler)
 
-	logger := CustomLogger{consoleWriter: textLogger, logFileWriter: jsonLogger, file: logFile}
-	return &logger, nil
+	return &CustomLogger{
+		consoleLogger: textLogger,
+		fileLogger:    jsonLogger,
+		file:          logFile,
+	}, nil
 }
 
 // Close the log file when done
@@ -58,21 +61,21 @@ func (cl *CustomLogger) Close() error {
 }
 
 func (cl *CustomLogger) Debug(msg string, args ...any) {
-	cl.consoleWriter.Debug(msg, args...)
-	cl.logFileWriter.Debug(msg, args...)
+	cl.consoleLogger.Debug(msg, args...)
+	cl.fileLogger.Debug(msg, args...)
 }
 
 func (cl *CustomLogger) Info(msg string, args ...any) {
-	cl.consoleWriter.Info(msg, args...)
-	cl.logFileWriter.Info(msg, args...)
+	cl.consoleLogger.Info(msg, args...)
+	cl.fileLogger.Info(msg, args...)
 }
 
 func (cl *CustomLogger) Warn(msg string, args ...any) {
-	cl.consoleWriter.Warn(msg, args...)
-	cl.logFileWriter.Warn(msg, args...)
+	cl.consoleLogger.Warn(msg, args...)
+	cl.fileLogger.Warn(msg, args...)
 }
 
 func (cl *CustomLogger) Error(msg string, args ...any) {
-	cl.consoleWriter.Error(msg, args...)
-	cl.logFileWriter.Error(msg, args...)
+	cl.consoleLogger.Error(msg, args...)
+	cl.fileLogger.Error(msg, args...)
 }
