@@ -11,7 +11,7 @@ Initially built as part of the [Boot.dev](https://www.boot.dev/) backend curricu
 ## Run
 
 ```sh
-go run .
+make run
 ```
 
 You'll be dropped into the `Pokedex >` prompt. Type `help` to see the available commands.
@@ -19,7 +19,7 @@ You'll be dropped into the `Pokedex >` prompt. Type `help` to see the available 
 ## Build
 
 ```sh
-go build -o pokedex
+make build
 ./pokedex
 ```
 
@@ -52,5 +52,7 @@ API responses are cached in-memory with a background reaper, so paging back and 
 ## Tests
 
 ```sh
-go test ./...
+make test
 ```
+
+Run `make ci` to execute the same checks CI runs on a PR (formatting, vet, race tests, build, module hygiene). `make help` lists every available target.
