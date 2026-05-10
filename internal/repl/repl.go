@@ -40,6 +40,7 @@ func Run(in io.Reader, out io.Writer) {
 		Logger:           lgr,
 	}
 
+	lgr.Debug("App started")
 	fmt.Fprint(out, "Pokedex > ")
 	for scanner.Scan() {
 		cleaned := cleanInput(scanner.Text())
@@ -47,7 +48,7 @@ func Run(in io.Reader, out io.Writer) {
 		if len(cleaned) > 0 {
 			command, ok := getCommand(cleaned[0])
 			if !ok {
-				fmt.Fprintln(out, "Unknown command")
+				lgr.Error("Unknown command", "invalidCommand", cleaned[0])
 				fmt.Fprint(out, "Pokedex > ")
 				continue
 			}
@@ -57,7 +58,7 @@ func Run(in io.Reader, out io.Writer) {
 				if errors.Is(err, ErrCleanExit) {
 					return
 				}
-				fmt.Fprintf(out, "Error: %v\n", err)
+				lgr.Error("Error executing command", "command", command, "error", err.Error())
 			}
 		}
 
@@ -65,6 +66,6 @@ func Run(in io.Reader, out io.Writer) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Fprintf(out, "Invalid input: %s\n", err)
+		lgr.Error("Invalid input", "error", err.Error())
 	}
 }
