@@ -13,6 +13,14 @@ import (
 	"github.com/kelvinjrosado/pokedex/internal/pokecache"
 )
 
+type Config struct {
+	Cache            *pokecache.Cache
+	CaughtPokemonMap *pokeapi.CaughtPokemonMap
+	Logger           *logger.CustomLogger
+	MapIndex         int
+	Writer           io.Writer
+}
+
 // Run reads commands from in and writes prompts and output to out, returning
 // when the user runs `exit`, when in reaches EOF, or when the scanner errors.
 func Run(in io.Reader, out io.Writer) {

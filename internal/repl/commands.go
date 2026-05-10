@@ -10,6 +10,8 @@ import (
 	"github.com/kelvinjrosado/pokedex/internal/pokeapi"
 )
 
+var ErrCleanExit = errors.New("clean exit")
+
 func commandExit(config *Config, args []string) error {
 	fmt.Fprintln(config.Writer, "Closing the Pokedex... Goodbye!")
 	return ErrCleanExit
