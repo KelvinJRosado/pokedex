@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 
+	"github.com/kelvinjrosado/pokedex/internal/logger"
 	"github.com/kelvinjrosado/pokedex/internal/pokeapi"
 	"github.com/kelvinjrosado/pokedex/internal/pokecache"
 )
@@ -11,6 +12,7 @@ import (
 type Config struct {
 	Cache            *pokecache.Cache
 	CaughtPokemonMap *pokeapi.CaughtPokemonMap
+	Logger           *logger.CustomLogger
 	MapIndex         int
 	Writer           io.Writer
 }

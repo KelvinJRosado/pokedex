@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"time"
 
 	"github.com/kelvinjrosado/pokedex/internal/logger"
@@ -14,17 +15,28 @@ import (
 
 // Run reads commands from in and writes prompts and output to out, returning
 // when the user runs `exit`, when in reaches EOF, or when the scanner errors.
-func Run(in io.Reader, out io.Writer, logger logger.CustomLogger) {
+func Run(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 
+	// Init cache
 	cache := pokecache.NewCache(time.Second * 5)
 	defer cache.Stop()
 
+	// Init pokedex
 	cpl := pokeapi.NewCaughtPokemonMap()
+
+	// Init logger
+	logger, err := logger.NewLogger()
+	if err != nil {
+		log.Fatal("Unable to start logger")
+	}
+	defer logger.Close()
+
 	config := Config{
 		Cache:            cache,
 		CaughtPokemonMap: cpl,
 		Writer:           out,
+		Logger:           logger,
 	}
 
 	fmt.Fprint(out, "Pokedex > ")
