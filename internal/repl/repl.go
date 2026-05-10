@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"time"
 
 	"github.com/kelvinjrosado/pokedex/internal/logger"
@@ -23,14 +22,7 @@ type Config struct {
 
 // Run reads commands from in and writes prompts and output to out, returning
 // when the user runs `exit`, when in reaches EOF, or when the scanner errors.
-func Run(in io.Reader, out io.Writer) {
-
-	// Init logger
-	lgr, err := logger.NewLogger()
-	if err != nil {
-		log.Fatalf("Unable to start logger: %v", err)
-	}
-	defer lgr.Close()
+func Run(in io.Reader, out io.Writer, lgr *logger.CustomLogger) {
 
 	scanner := bufio.NewScanner(in)
 
