@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -12,6 +13,17 @@ type CustomLogger struct {
 	consoleLogger *slog.Logger
 	fileLogger    *slog.Logger
 	file          *os.File
+}
+
+// NewWithWriters builds a CustomLogger that writes text to console and JSON to
+// file. The writers are not owned, so Close is a no-op — useful for tests that
+// capture output via bytes.Buffer.
+func NewWithWriters(console, file io.Writer) *CustomLogger {
+	opts := &slog.HandlerOptions{Level: slog.LevelDebug}
+	return &CustomLogger{
+		consoleLogger: slog.New(slog.NewTextHandler(console, opts)),
+		fileLogger:    slog.New(slog.NewJSONHandler(file, opts)),
+	}
 }
 
 func NewLogger() (*CustomLogger, error) {
@@ -39,24 +51,17 @@ func NewLogger() (*CustomLogger, error) {
 		return nil, err
 	}
 
-	// Build handlers
-	loggerOptions := &slog.HandlerOptions{Level: slog.LevelDebug}
-	textHandler := slog.NewTextHandler(os.Stdout, loggerOptions) // text to console
-	jsonHandler := slog.NewJSONHandler(logFile, loggerOptions)   // JSON to log file
-
-	// Build loggers
-	textLogger := slog.New(textHandler)
-	jsonLogger := slog.New(jsonHandler)
-
-	return &CustomLogger{
-		consoleLogger: textLogger,
-		fileLogger:    jsonLogger,
-		file:          logFile,
-	}, nil
+	cl := NewWithWriters(os.Stdout, logFile)
+	cl.file = logFile
+	return cl, nil
 }
 
-// Close the log file when done
+// Close the log file when done. Safe to call on loggers built with
+// NewWithWriters (no file is owned in that case).
 func (cl *CustomLogger) Close() error {
+	if cl.file == nil {
+		return nil
+	}
 	return cl.file.Close()
 }
 
