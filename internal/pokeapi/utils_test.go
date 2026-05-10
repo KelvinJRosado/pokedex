@@ -1,12 +1,14 @@
 package pokeapi
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/kelvinjrosado/pokedex/internal/logger"
 	"github.com/kelvinjrosado/pokedex/internal/pokecache"
 )
 
@@ -29,6 +31,11 @@ func newCache(t *testing.T) *pokecache.Cache {
 	return c
 }
 
+func newTestClient(t *testing.T) *Client {
+	t.Helper()
+	return NewClient(newCache(t), logger.NewWithWriters(io.Discard, io.Discard))
+}
+
 func TestFetchWithCacheNetworkSuccess(t *testing.T) {
 	hits := 0
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -39,8 +46,8 @@ func TestFetchWithCacheNetworkSuccess(t *testing.T) {
 	defer srv.Close()
 	withTestServer(t, srv)
 
-	cache := newCache(t)
-	got, err := fetchWithCache[PokemonDetails](cache, pokeapiBaseUrl+"pokemon/charmander", "PokemonDetails")
+	client := newTestClient(t)
+	got, err := fetchWithCache[PokemonDetails](client, pokeapiBaseUrl+"pokemon/charmander", "PokemonDetails")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -61,13 +68,13 @@ func TestFetchWithCacheServesFromCache(t *testing.T) {
 	defer srv.Close()
 	withTestServer(t, srv)
 
-	cache := newCache(t)
+	client := newTestClient(t)
 	url := pokeapiBaseUrl + "pokemon/pikachu"
 
-	if _, err := fetchWithCache[PokemonDetails](cache, url, "PokemonDetails"); err != nil {
+	if _, err := fetchWithCache[PokemonDetails](client, url, "PokemonDetails"); err != nil {
 		t.Fatalf("first call failed: %v", err)
 	}
-	if _, err := fetchWithCache[PokemonDetails](cache, url, "PokemonDetails"); err != nil {
+	if _, err := fetchWithCache[PokemonDetails](client, url, "PokemonDetails"); err != nil {
 		t.Fatalf("second call failed: %v", err)
 	}
 	if hits != 1 {
@@ -82,8 +89,8 @@ func TestFetchWithCacheNon2xxReturnsError(t *testing.T) {
 	defer srv.Close()
 	withTestServer(t, srv)
 
-	cache := newCache(t)
-	_, err := fetchWithCache[PokemonDetails](cache, pokeapiBaseUrl+"pokemon/missingno", "PokemonDetails")
+	client := newTestClient(t)
+	_, err := fetchWithCache[PokemonDetails](client, pokeapiBaseUrl+"pokemon/missingno", "PokemonDetails")
 	if err == nil {
 		t.Fatal("expected error for 404 response")
 	}
@@ -99,8 +106,8 @@ func TestFetchWithCacheMalformedJSON(t *testing.T) {
 	defer srv.Close()
 	withTestServer(t, srv)
 
-	cache := newCache(t)
-	_, err := fetchWithCache[PokemonDetails](cache, pokeapiBaseUrl+"pokemon/x", "PokemonDetails")
+	client := newTestClient(t)
+	_, err := fetchWithCache[PokemonDetails](client, pokeapiBaseUrl+"pokemon/x", "PokemonDetails")
 	if err == nil {
 		t.Fatal("expected unmarshal error")
 	}
@@ -108,8 +115,8 @@ func TestFetchWithCacheMalformedJSON(t *testing.T) {
 
 func TestFetchWithCacheNetworkError(t *testing.T) {
 	// An unroutable URL forces http.Get to fail.
-	cache := newCache(t)
-	_, err := fetchWithCache[PokemonDetails](cache, "http://127.0.0.1:1/never", "PokemonDetails")
+	client := newTestClient(t)
+	_, err := fetchWithCache[PokemonDetails](client, "http://127.0.0.1:1/never", "PokemonDetails")
 	if err == nil {
 		t.Fatal("expected network error")
 	}
@@ -134,8 +141,8 @@ func TestFetchWithCacheReadBodyError(t *testing.T) {
 	defer srv.Close()
 	withTestServer(t, srv)
 
-	cache := newCache(t)
-	_, err := fetchWithCache[PokemonDetails](cache, pokeapiBaseUrl+"pokemon/glitcho", "PokemonDetails")
+	client := newTestClient(t)
+	_, err := fetchWithCache[PokemonDetails](client, pokeapiBaseUrl+"pokemon/glitcho", "PokemonDetails")
 	if err == nil {
 		t.Fatal("expected error reading response body")
 	}

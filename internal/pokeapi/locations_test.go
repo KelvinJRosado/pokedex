@@ -23,8 +23,8 @@ func TestGetLocationAreaSlice(t *testing.T) {
 	defer srv.Close()
 	withTestServer(t, srv)
 
-	cache := newCache(t)
-	got, err := GetLocationAreaSlice(40, MapIncrement, cache)
+	client := newTestClient(t)
+	got, err := client.GetLocationAreaSlice(40, MapIncrement)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -43,8 +43,8 @@ func TestGetLocationAreaSlicePropagatesError(t *testing.T) {
 	defer srv.Close()
 	withTestServer(t, srv)
 
-	cache := newCache(t)
-	if _, err := GetLocationAreaSlice(0, MapIncrement, cache); err == nil {
+	client := newTestClient(t)
+	if _, err := client.GetLocationAreaSlice(0, MapIncrement); err == nil {
 		t.Fatal("expected error for 500 response")
 	}
 }
@@ -65,8 +65,8 @@ func TestGetLocationAreaDetails(t *testing.T) {
 	defer srv.Close()
 	withTestServer(t, srv)
 
-	cache := newCache(t)
-	got, err := GetLocationAreaDetails("canalave-city-area", cache)
+	client := newTestClient(t)
+	got, err := client.GetLocationAreaDetails("canalave-city-area")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

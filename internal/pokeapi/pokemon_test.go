@@ -28,8 +28,8 @@ func TestGetPokemonDetails(t *testing.T) {
 	defer srv.Close()
 	withTestServer(t, srv)
 
-	cache := newCache(t)
-	got, err := GetPokemonDetails("charmander", cache)
+	client := newTestClient(t)
+	got, err := client.GetPokemonDetails("charmander")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

@@ -1,23 +1,13 @@
 package pokeapi
 
-import (
-	"fmt"
+import "fmt"
 
-	"github.com/kelvinjrosado/pokedex/internal/pokecache"
-)
-
-func GetLocationAreaSlice(startId, count int, cache *pokecache.Cache) (LocationAreaList, error) {
-
-	// Build exact path to get location area data
+func (c *Client) GetLocationAreaSlice(startId, count int) (LocationAreaList, error) {
 	fullPath := fmt.Sprintf("%vlocation-area/?offset=%d&limit=%d", pokeapiBaseUrl, startId, count)
-
-	return fetchWithCache[LocationAreaList](cache, fullPath, "LocationAreaList")
+	return fetchWithCache[LocationAreaList](c, fullPath, "LocationAreaList")
 }
 
-func GetLocationAreaDetails(name string, cache *pokecache.Cache) (LocationAreaDetails, error) {
-
-	// Build exact path to get location area detail data
+func (c *Client) GetLocationAreaDetails(name string) (LocationAreaDetails, error) {
 	fullPath := fmt.Sprintf("%vlocation-area/%v", pokeapiBaseUrl, name)
-
-	return fetchWithCache[LocationAreaDetails](cache, fullPath, "LocationAreaDetails")
+	return fetchWithCache[LocationAreaDetails](c, fullPath, "LocationAreaDetails")
 }

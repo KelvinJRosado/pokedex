@@ -13,9 +13,8 @@ import (
 )
 
 type Config struct {
-	Cache            *pokecache.Cache
+	Client           *pokeapi.Client
 	CaughtPokemonMap *pokeapi.CaughtPokemonMap
-	Logger           *logger.CustomLogger
 	MapIndex         int
 	Writer           io.Writer
 }
@@ -26,18 +25,13 @@ func Run(in io.Reader, out io.Writer, lgr *logger.CustomLogger) {
 
 	scanner := bufio.NewScanner(in)
 
-	// Init cache
 	cache := pokecache.NewCache(time.Second * 5)
 	defer cache.Stop()
 
-	// Init pokedex
-	cpl := pokeapi.NewCaughtPokemonMap()
-
 	config := Config{
-		Cache:            cache,
-		CaughtPokemonMap: cpl,
+		Client:           pokeapi.NewClient(cache, lgr),
+		CaughtPokemonMap: pokeapi.NewCaughtPokemonMap(),
 		Writer:           out,
-		Logger:           lgr,
 	}
 
 	lgr.Debug("App started")

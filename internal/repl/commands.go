@@ -35,7 +35,7 @@ func commandHelp(config *Config, args []string) error {
 
 func commandMap(config *Config, args []string) error {
 
-	las, err := pokeapi.GetLocationAreaSlice(config.MapIndex, pokeapi.MapIncrement, config.Cache)
+	las, err := config.Client.GetLocationAreaSlice(config.MapIndex, pokeapi.MapIncrement)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func commandMapb(config *Config, args []string) error {
 	// Decrease map pointer
 	config.MapIndex -= (pokeapi.MapIncrement * 2)
 
-	las, err := pokeapi.GetLocationAreaSlice(config.MapIndex, pokeapi.MapIncrement, config.Cache)
+	las, err := config.Client.GetLocationAreaSlice(config.MapIndex, pokeapi.MapIncrement)
 	if err != nil {
 		config.MapIndex += (pokeapi.MapIncrement * 2) // restore map index
 		return err
@@ -84,7 +84,7 @@ func commandExplore(config *Config, args []string) error {
 
 	locationName := args[1]
 
-	details, err := pokeapi.GetLocationAreaDetails(locationName, config.Cache)
+	details, err := config.Client.GetLocationAreaDetails(locationName)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func commandCatch(config *Config, args []string) error {
 	pokemonName := args[1]
 
 	// Get details
-	pokemonDetails, err := pokeapi.GetPokemonDetails(pokemonName, config.Cache)
+	pokemonDetails, err := config.Client.GetPokemonDetails(pokemonName)
 	if err != nil {
 		return err
 	}

@@ -3,12 +3,14 @@ package repl
 import (
 	"bytes"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/kelvinjrosado/pokedex/internal/logger"
 	"github.com/kelvinjrosado/pokedex/internal/pokeapi"
 	"github.com/kelvinjrosado/pokedex/internal/pokecache"
 )
@@ -19,9 +21,10 @@ func newTestConfig(t *testing.T) (*Config, *bytes.Buffer) {
 	t.Helper()
 	cache := pokecache.NewCache(time.Hour)
 	t.Cleanup(cache.Stop)
+	lgr := logger.NewWithWriters(io.Discard, io.Discard)
 	var buf bytes.Buffer
 	return &Config{
-		Cache:            cache,
+		Client:           pokeapi.NewClient(cache, lgr),
 		CaughtPokemonMap: pokeapi.NewCaughtPokemonMap(),
 		Writer:           &buf,
 	}, &buf

@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/kelvinjrosado/pokedex/internal/pokecache"
 )
 
-func fetchWithCache[T any](cache *pokecache.Cache, fullPath, label string) (T, error) {
+// fetchWithCache is a free function (not a method) because Go does not allow
+// methods to declare type parameters. Callers pass the Client they would have
+// been a receiver on.
+func fetchWithCache[T any](c *Client, fullPath, label string) (T, error) {
 	// Init response
 	var response T
 
@@ -17,10 +18,10 @@ func fetchWithCache[T any](cache *pokecache.Cache, fullPath, label string) (T, e
 	var data []byte
 
 	// Check cache
-	cacheRes, hit := cache.Get(fullPath)
+	cacheRes, hit := c.Cache.Get(fullPath)
 	if hit {
 		data = cacheRes
-		fmt.Println("Serving response from cache") // TODO: Convert to debug log
+		c.Logger.Debug("Serving response from cache", "path", fullPath)
 	} else {
 		// Built GET request
 		res, err := http.Get(fullPath)
@@ -41,7 +42,7 @@ func fetchWithCache[T any](cache *pokecache.Cache, fullPath, label string) (T, e
 		}
 
 		// Save response to cache
-		cache.Add(fullPath, data)
+		c.Cache.Add(fullPath, data)
 	}
 
 	// Convert data to struct
