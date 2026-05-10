@@ -16,6 +16,14 @@ import (
 // Run reads commands from in and writes prompts and output to out, returning
 // when the user runs `exit`, when in reaches EOF, or when the scanner errors.
 func Run(in io.Reader, out io.Writer) {
+
+	// Init logger
+	lgr, err := logger.NewLogger()
+	if err != nil {
+		log.Fatalf("Unable to start logger: %v", err)
+	}
+	defer lgr.Close()
+
 	scanner := bufio.NewScanner(in)
 
 	// Init cache
@@ -25,18 +33,11 @@ func Run(in io.Reader, out io.Writer) {
 	// Init pokedex
 	cpl := pokeapi.NewCaughtPokemonMap()
 
-	// Init logger
-	logger, err := logger.NewLogger()
-	if err != nil {
-		log.Fatal("Unable to start logger")
-	}
-	defer logger.Close()
-
 	config := Config{
 		Cache:            cache,
 		CaughtPokemonMap: cpl,
 		Writer:           out,
-		Logger:           logger,
+		Logger:           lgr,
 	}
 
 	fmt.Fprint(out, "Pokedex > ")
