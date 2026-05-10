@@ -31,7 +31,7 @@ func NewLogger() (*CustomLogger, error) {
 
 	// Generate log file name
 	logFileName := time.Now().Format("2006-01-02")
-	logFilePath := filepath.Join(logPath, logFileName)
+	logFilePath := filepath.Join(logPath, logFileName+".log")
 
 	// Open log file
 	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
